@@ -124,8 +124,7 @@ with st.sidebar:
     st.markdown("# ⚡ CEC Fallas")
     st.markdown("---")
     st.markdown("### 📁 Archivo de datos")
-    ruta_default=os.path.join(os.path.expanduser("~"),"Documents","Gustavo",
-                              "2026-1","ASEDenF","datos_T1",
+    ruta_default=os.path.join(os.path.expanduser("~"),
                               "Estadisticas de Interrupciones.xlsx")
     excel_path=st.text_input("Ruta del Excel:",value=ruta_default)
     if not os.path.exists(excel_path):
