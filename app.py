@@ -34,7 +34,7 @@ ARCHIVO_CSV  = "fallas_ingresadas.csv"
 EXCEL_PATH   = "Estadisticas_de_Interrupciones.xlsx"
 
 # ─── Constantes ───────────────────────────────────────────
-ETIQUETAS    = {"FM":"🔴 Fuerza Mayor","E":"🟡 Externa","I":"🟢 Interna"}
+ETIQUETAS    = {"FM":"Fuerza Mayor","E":"Externa","I":"Interna"}
 COLORES      = {"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"}
 COLORES_ALIM = {2:"blue",6:"red",7:"green",8:"purple",9:"orange",10:"darkblue"}
 
@@ -50,7 +50,7 @@ CUADRILLAS = [
 ]
 
 CAUSAS = {
-    "🌿 Árboles / Vegetación":{"cal":"I","subs":[
+    "Árboles / Vegetación":{"cal":"I","subs":[
         ("Caída de árbol sobre la red","Caída de árbol sobre red MT/BT"),
         ("Caída de gancho o rama","Caída de rama o gancho sobre conductor"),
         ("Poda inadecuada por cliente","Cliente efectuó poda propia indebida afectando red"),
@@ -58,7 +58,7 @@ CAUSAS = {
         ("Sector sin podar","Sector sin podar o mal podado afecta red"),
         ("Daño por empresa forestal","Daño por faena de empresa forestal en franja"),
         ("Otro árbol/vegetación","Daño por vegetación — causa no especificada")]},
-    "⛈ Condiciones Atmosféricas":{"cal":"I","subs":[
+    "Condiciones Atmosféricas":{"cal":"I","subs":[
         ("Temporal / viento fuerte","Interrupción por temporal o viento fuerte"),
         ("Lluvia intensa","Interrupción por lluvia intensa"),
         ("Granizo","Interrupción por granizo"),
@@ -67,7 +67,7 @@ CAUSAS = {
         ("Rayo / descarga eléctrica","Descarga eléctrica (rayo) impacta instalación"),
         ("Neblina / ambiente salino","Interrupción por neblina o ambiente salino"),
         ("Temperatura extrema","Interrupción por temperatura extrema")]},
-    "🚗 Accidentes / Vehículos":{"cal":"FM","subs":[
+    "Accidentes / Vehículos":{"cal":"FM","subs":[
         ("Choque de vehículo a poste","Choque de vehículo a poste de distribución"),
         ("Vehículo alto bota cable MT","Vehículo > 4.5m bota cable media tensión"),
         ("Vehículo alto bota cable BT","Vehículo > 4.5m bota cable baja tensión"),
@@ -75,23 +75,23 @@ CAUSAS = {
         ("Máquina retroexcavadora","Daño por máquina retroexcavadora"),
         ("Daño en faena particular","Daño debido a faena en propiedad particular"),
         ("Otro accidente","Accidente — causa no especificada")]},
-    "🔥 Incendio":{"cal":"FM","subs":[
+    "Incendio":{"cal":"FM","subs":[
         ("Calor por incendio externo","Calor en instalación por incendio externo"),
         ("Quema de pastizales","Interrupción por quema de pastizales"),
         ("Solicitud de bomberos","Intervención a solicitud de bomberos"),
         ("Otro incendio","Incendio — causa no especificada")]},
-    "🌊 Eventos Catastróficos":{"cal":"FM","subs":[
+    "Eventos Catastróficos":{"cal":"FM","subs":[
         ("Inundación","Interrupción por inundación"),
         ("Aluvión / deslizamiento","Interrupción por aluvión o deslizamiento"),
         ("Movimiento telúrico (sismo)","Interrupción por sismo"),
         ("Otro catastrófico","Evento catastrófico — no especificado")]},
-    "🦅 Animales":{"cal":"I","subs":[
+    "Animales":{"cal":"I","subs":[
         ("Ave en instalación","Contacto de ave con instalación eléctrica"),
         ("Mamífero en instalación","Contacto de mamífero con instalación"),
         ("Roedor daña cable","Roedor daña aislación de cable"),
         ("Insecto / colmena","Insecto o colmena en instalación"),
         ("Otro animal","Animal — causa no especificada")]},
-    "🔧 Falla en la Red (Interna)":{"cal":"I","subs":[
+    "Falla en la Red (Interna)":{"cal":"I","subs":[
         ("Operación imprevista de equipo","Operación imprevista de equipo de maniobra"),
         ("Error de operación","Error de operación por personal"),
         ("Falla de material / equipo","Falla de material o equipo de la red"),
@@ -101,7 +101,7 @@ CAUSAS = {
         ("Falla transformador distribución","Falla en transformador de distribución"),
         ("Mantenimiento preventivo","Corte programado por mantenimiento"),
         ("Otra falla interna","Falla interna — no especificada")]},
-    "⚡ Causa Externa (Sistema)":{"cal":"E","subs":[
+    "Causa Externa (Sistema)":{"cal":"E","subs":[
         ("Blackout del sistema","Blackout del sistema eléctrico nacional"),
         ("Falla en transmisión (Transelec)","Falla en línea/subestación de transmisión"),
         ("Falla en subtransmisión","Falla en línea/subestación de subtransmisión"),
@@ -109,14 +109,14 @@ CAUSAS = {
         ("Baja/sobre frecuencia","Protección por baja o sobre frecuencia"),
         ("Programada generación","Interrupción programada por generación"),
         ("Otra causa externa","Causa externa — no especificada")]},
-    "🎯 Actos Vandálicos":{"cal":"FM","subs":[
+    "Actos Vandálicos":{"cal":"FM","subs":[
         ("Robo de conductor","Robo de conductor en red"),
         ("Robo de equipo","Robo de equipo eléctrico"),
         ("Objeto lanzado","Objeto lanzado sobre red"),
         ("Atentado / explosivos","Atentado con explosivos"),
         ("Sabotaje","Sabotaje a instalación eléctrica"),
         ("Otro vandálico","Acto vandálico — no especificado")]},
-    "👤 Instalación de Cliente":{"cal":"I","subs":[
+    "Instalación de Cliente":{"cal":"I","subs":[
         ("Falla en artefacto eléctrico","Falla en artefacto eléctrico del cliente"),
         ("Problema neutro / puesta tierra","Problema de neutro o puesta a tierra"),
         ("Capacidad insuficiente S/E","Capacidad insuficiente subestación cliente"),
@@ -167,41 +167,41 @@ with st.sidebar:
         if os.path.exists("logo_udec.png"):
             st.image("logo_udec.png",width=100)
     with col_l2:
-        if os.path.exists("logo_cec.jpg"):
-            st.image("logo_cec.jpg",width=100)
+        if os.path.exists("logo_cec.png"):
+            st.image("logo_cec.png",width=100)
     st.markdown("---")
-    st.markdown("# ⚡ CEC Fallas")
-    st.markdown("🌐 [Sitio web CEC](https://cecltda.cl/)")
+    st.markdown("# CEC Fallas")
+    st.markdown("[Sitio web CEC](https://cecltda.cl/)")
     st.markdown("---")
     if not os.path.exists(EXCEL_PATH):
-        st.error("❌ Excel no encontrado"); st.stop()
+        st.error("Excel no encontrado"); st.stop()
     else:
-        st.success("✅ Sistema conectado")
+        st.success("Sistema conectado")
     st.markdown("---")
     pagina=st.radio("Navegación:",[
-        "📝 Registrar Falla","📋 Historial",
-        "📊 Datos Históricos","📈 Datos Actuales",
-        "🔥 Mapa de Calor","🗺 Mapa General","ℹ️ Ayuda"])
+        "Registrar Falla","Historial",
+        "Datos Históricos","Datos Actuales",
+        "Mapa de Calor","Mapa General","Ayuda"])
     st.markdown("---")
     st.markdown("""
-    <div style='font-size:15px;color:#888;text-align:center;padding:10px 0'>
+    <div style='font-size:11px;color:#888;text-align:center;padding:10px 0'>
         <b>Desarrollado por:</b><br><br>
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
            target='_blank' style='color:#0077b5;text-decoration:none'>
-           👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
+           Gustavo Puentes Lermanda</a><br><br>
+        <a href='https://www.linkedin.com/in/PERFIL-SOFIA'
            target='_blank' style='color:#0077b5;text-decoration:none'>
-           👤 Sofía Nahuelpán Álvarez</a><br><br>
+           Sofía Nahuelpán Álvarez</a><br><br>
         <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
            target='_blank' style='color:#0077b5;text-decoration:none'>
-           👤 Sebastián Castro Astudillo</a><br><br>
+           Sebastián Castro Astudillo</a><br><br>
         <i>Depto. Ingeniería Eléctrica<br>Universidad de Concepción</i>
     </div>
     """,unsafe_allow_html=True)
     st.caption("Clasificador CEC v3 © 2026")
 
 # ─── Cargar modelos ───────────────────────────────────────
-@st.cache_resource(show_spinner="⏳ Cargando datos y entrenando modelos...")
+@st.cache_resource(show_spinner="Cargando datos y entrenando modelos...")
 def cargar_modelos(path):
     def tf(v):
         try: return float(str(v).replace(",","."))
@@ -273,9 +273,9 @@ def id_alim(x,y):
 # ══════════════════════════════════════════════════════════
 # PÁGINA 1 — REGISTRAR FALLA
 # ══════════════════════════════════════════════════════════
-if pagina=="📝 Registrar Falla":
-    st.markdown("## 📝 Registro de Interrupción")
-    st.markdown('<div class="sec">👤 Sección 1 — Operador</div>',unsafe_allow_html=True)
+if pagina=="Registrar Falla":
+    st.markdown("## Registro de Interrupción")
+    st.markdown('<div class="sec">Sección 1 — Operador</div>',unsafe_allow_html=True)
     c1,c2,c3=st.columns(3)
     with c1: usuario=st.text_input("Nombre del operador *",placeholder="Ej: Juan Pérez")
     with c2: cuad_sel=st.selectbox("Cuadrilla *",CUADRILLAS)
@@ -286,8 +286,8 @@ if pagina=="📝 Registrar Falla":
             cuadrilla=cuad_sel
             st.text_input("Cuadrilla:",value=cuadrilla,disabled=True)
     st.markdown("---")
-    st.markdown('<div class="sec">📝 Sección 2 — Descripción de la falla</div>',unsafe_allow_html=True)
-    modo=st.radio("Modo:",["🧭 Guiado (recomendado)","✏️ Manual"],horizontal=True)
+    st.markdown('<div class="sec">Sección 2 — Descripción de la falla</div>',unsafe_allow_html=True)
+    modo=st.radio("Modo:",["Guiado (recomendado)","Manual"],horizontal=True)
     desc=""; cat=""; sub=""; cal_sug=None
     if "Guiado" in modo:
         ca,cb=st.columns(2)
@@ -299,14 +299,14 @@ if pagina=="📝 Registrar Falla":
         det=st.text_area("Detalles adicionales:",placeholder="Sector, equipo, observaciones...",height=70)
         desc=base+(f". {det}" if det.strip() else "")
         cat=categoria; sub=subcausa; cal_sug=CAUSAS[categoria]["cal"]
-        st.info(f"📋 Descripción generada: {desc}")
+        st.info(f"Descripción generada: {desc}")
     else:
         desc=st.text_area("Descripción:",placeholder="Ej: Se abre reconectador RCU5724...",height=100)
         cat="Manual"; sub="Manual"
     st.markdown("---")
 
     # Sección 3: Datos técnicos
-    st.markdown('<div class="sec">🔧 Sección 3 — Datos técnicos del evento</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Sección 3 — Datos técnicos del evento</div>',unsafe_allow_html=True)
     d1,d2,d3 = st.columns(3)
     with d1:
         trafos = st.number_input("Trafos afectados:",min_value=0,value=0,step=1)
@@ -321,7 +321,7 @@ if pagina=="📝 Registrar Falla":
     st.markdown("---")
 
     # Sección 4: Fecha/hora y duración
-    st.markdown('<div class="sec">🕐 Sección 4 — Fechas y duración</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Sección 4 — Fechas y duración</div>',unsafe_allow_html=True)
     f1,f2,f3 = st.columns(3)
     with f1:
         fecha_inicio = st.date_input("Fecha inicio:")
@@ -340,8 +340,8 @@ if pagina=="📝 Registrar Falla":
     st.markdown("---")
 
     # Sección 5: Foto
-    st.markdown('<div class="sec">📷 Sección 5 — Foto de la falla (opcional)</div>',unsafe_allow_html=True)
-    foto = st.file_uploader("Sube una foto desde tu dispositivo:",
+    st.markdown('<div class="sec">Sección 5 — Foto de la falla (opcional)</div>',unsafe_allow_html=True)
+    foto = st.file_uploader("Foto de la falla:",
                             type=["jpg","jpeg","png"],
                             help="Puedes tomar la foto desde el celular y subirla aquí")
     if foto:
@@ -350,7 +350,7 @@ if pagina=="📝 Registrar Falla":
     st.markdown("---")
 
     # Sección 6: Coordenadas
-    st.markdown('<div class="sec">📍 Sección 6 — Coordenadas UTM zona 19S (opcional)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Sección 6 — Coordenadas UTM zona 19S (opcional)</div>',unsafe_allow_html=True)
     cx,cy,ci=st.columns([2,2,3])
     with cx:
         xv_str=st.text_input("X — Este:",placeholder="Ej: 315569.5",key="coord_x")
@@ -365,10 +365,10 @@ if pagina=="📝 Registrar Falla":
             lp,lop=u2l(xv,yv); st.success(f"Lat:{lp:.5f} | Lon:{lop:.5f}")
         else: st.info("Ingresa X e Y para identificar el alimentador")
     st.markdown("---")
-    if st.button("🔍 Clasificar falla",type="primary"):
+    if st.button("Clasificar falla",type="primary"):
         errs=[]
-        if not usuario.strip(): errs.append("⚠️ Ingresa el nombre del operador.")
-        if not desc.strip(): errs.append("⚠️ Ingresa o selecciona una descripción.")
+        if not usuario.strip(): errs.append("Ingresa el nombre del operador.")
+        if not desc.strip(): errs.append("Ingresa o selecciona una descripción.")
         for e in errs: st.error(e)
         if not errs:
             rf=predecir(desc)
@@ -400,18 +400,18 @@ if pagina=="📝 Registrar Falla":
           <p style="margin:8px 0 0;font-size:13px"><b>Descripción:</b> {u["desc"]}</p>
         </div>""",unsafe_allow_html=True)
         p1,p2,p3=st.columns(3)
-        p1.metric("🔴 FM",f"{rf[chr(70)+chr(77)]}%"); p1.progress(rf["FM"]/100)
-        p2.metric("🟡 Externa",f"{rf[chr(69)]}%"); p2.progress(rf["E"]/100)
-        p3.metric("🟢 Interna",f"{rf[chr(73)]}%"); p3.progress(rf["I"]/100)
+        p1.metric("FM",f"{rf[chr(70)+chr(77)]}%"); p1.progress(rf["FM"]/100)
+        p2.metric("Externa",f"{rf[chr(69)]}%"); p2.progress(rf["E"]/100)
+        p3.metric("Interna",f"{rf[chr(73)]}%"); p3.progress(rf["I"]/100)
         if rg:
-            nivel="🟢 Alta" if rg["conf"]>=80 else "🟡 Media" if rg["conf"]>=50 else "🔴 Baja"
+            nivel="Alta" if rg["conf"]>=80 else "Media" if rg["conf"]>=50 else "Baja (revisar)"
             votos=" | ".join(f"Alim.{a}:{p}%" for a,p in sorted(rg["votos"].items(),key=lambda x:-x[1]))
             st.markdown(f"""<div class="geo-card">
-              <b>📍 Alimentador identificado: #{rg["alim"]}</b> {nivel} ({rg["conf"]}%)<br>
+              <b>Alimentador identificado: #{rg["alim"]}</b> Confianza {nivel} ({rg["conf"]}%)<br>
               Dist.punto histórico:{rg["dist_p"]}m | Comunas:{rg["comunas"]}<br>
               <small>Votos KNN: {votos}</small>
             </div>""",unsafe_allow_html=True)
-            with st.expander("🗺 Ver mapa",expanded=True):
+            with st.expander("Ver mapa",expanded=True):
                 m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
                 for alim,c in sorted(info_alim.items()):
                     col=COLORES_ALIM.get(alim,"gray"); es=rg["alim"]==alim
@@ -426,7 +426,7 @@ if pagina=="📝 Registrar Falla":
                             prefix="fa" if es else "glyphicon")).add_to(m)
                 if x_coord and y_coord:
                     lp,lop=u2l(x_coord,y_coord)
-                    folium.Marker([lp,lop],tooltip="📍 Punto de la falla",
+                    folium.Marker([lp,lop],tooltip="Punto de la falla",
                         popup=f"X:{x_coord:.0f} Y:{y_coord:.0f}",
                         icon=folium.Icon(color="black",icon="map-marker",prefix="fa")).add_to(m)
                     folium.PolyLine([[lp,lop],[info_alim[rg["alim"]]["lat"],info_alim[rg["alim"]]["lon"]]],
@@ -434,12 +434,12 @@ if pagina=="📝 Registrar Falla":
                     m.location=[lp,lop]; m.zoom_start=13
                 st_folium(m,width=700,height=400)
         else:
-            st.info("📍 Sin coordenadas — no se identificó alimentador.")
+            st.info("Sin coordenadas — no se identificó el alimentador.")
         if u.get("foto_bytes"):
-            st.markdown("**📷 Foto adjunta:**")
+            st.markdown("**Foto adjunta:**")
             st.image(u["foto_bytes"], width=300)
         st.markdown("---")
-        if st.button("💾 Guardar registro",type="primary"):
+        if st.button("Guardar registro",type="primary"):
             with st.spinner("Guardando en GitHub..."):
                 n=guardar({
                     "Usuario":u["usuario"],"Cuadrilla":u["cuadrilla"],
@@ -464,26 +464,26 @@ if pagina=="📝 Registrar Falla":
                     "Comunas_alim":rg["comunas"] if rg else ""},
                     foto_bytes=u.get("foto_bytes"),
                     foto_nombre=u.get("foto_nombre"))
-            st.success(f"✅ Registro N°{n} guardado en GitHub → {ARCHIVO_CSV}")
+            st.success(f"Registro N°{n} guardado correctamente en GitHub")
             st.session_state["mostrar"]=False
             st.session_state["ultimo"]={}
 
 # ══════════════════════════════════════════════════════════
 # PÁGINA 2 — HISTORIAL
 # ══════════════════════════════════════════════════════════
-elif pagina=="📋 Historial":
-    st.markdown("## 📋 Historial de Fallas")
+elif pagina=="Historial":
+    st.markdown("## Historial de Fallas")
     with st.spinner("Cargando historial desde GitHub..."):
         dh=cargar_hist()
     if dh.empty:
-        st.info("📭 Sin registros aún.")
+        st.info("Sin registros aún.")
     else:
         c1,c2,c3,c4=st.columns(4); c1.metric("Total",len(dh))
         if "Clasificacion" in dh.columns:
             cnt=dh["Clasificacion"].value_counts()
-            c2.metric("🔴 FM",cnt.get("FM",0))
-            c3.metric("🟡 E",cnt.get("E",0))
-            c4.metric("🟢 I",cnt.get("I",0))
+            c2.metric("FM",cnt.get("FM",0))
+            c3.metric("E",cnt.get("E",0))
+            c4.metric("I",cnt.get("I",0))
         st.markdown("---")
         fa,fb=st.columns(2)
         with fa:
@@ -499,24 +499,24 @@ elif pagina=="📋 Historial":
         col_d1,col_d2=st.columns(2)
         with col_d1:
             csv=dh.to_csv(index=False).encode("utf-8")
-            st.download_button("⬇️ Descargar CSV",csv,"historial_fallas.csv","text/csv")
+            st.download_button("Descargar CSV",csv,"historial_fallas.csv","text/csv")
         with col_d2:
             excel_buf=__import__("io").BytesIO()
             dh.to_excel(excel_buf,index=False); excel_buf.seek(0)
-            st.download_button("⬇️ Descargar Excel",excel_buf,
+            st.download_button("Descargar Excel",excel_buf,
                 "historial_fallas.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # ══════════════════════════════════════════════════════════
 # PÁGINA 3 — MAPA GENERAL
 # ══════════════════════════════════════════════════════════
-elif pagina=="🗺 Mapa General":
-    st.markdown("## 🗺 Mapa de Alimentadores CEC")
+elif pagina=="Mapa General":
+    st.markdown("## Mapa de Alimentadores CEC")
     ma,mb=st.columns([3,1])
     with mb:
         st.markdown("**Alimentadores:**")
         for alim,c in sorted(info_alim.items()):
-            st.markdown(f"● **Alim.{alim}** — {c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}")
+            st.markdown(f"Alim.{alim} — {c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}")
     with ma:
         m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
         for alim,c in sorted(info_alim.items()):
@@ -541,8 +541,8 @@ elif pagina=="🗺 Mapa General":
 # ══════════════════════════════════════════════════════════
 # PÁGINA 5 — ESTADÍSTICAS HISTÓRICAS
 # ══════════════════════════════════════════════════════════
-elif pagina=="📊 Datos Históricos":
-    st.markdown("## 📊 Estadísticas Históricas de Fallas (2018–2025)")
+elif pagina=="Datos Históricos":
+    st.markdown("## Estadísticas Históricas de Fallas (2018–2025)")
     try:
         import plotly.express as px
         import plotly.graph_objects as go
@@ -593,7 +593,7 @@ elif pagina=="📊 Datos Históricos":
     })
 
     # ── Sección 1: Cantidad de fallas por año ─────────────────────────────
-    st.markdown('<div class="sec">📊 Cantidad de Fallas por Año y Tipo (2018–2025)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Cantidad de Fallas por Año y Tipo (2018–2025)</div>',unsafe_allow_html=True)
     col1,col2=st.columns(2)
     with col1:
         cant_m=resumen.copy()
@@ -617,7 +617,7 @@ elif pagina=="📊 Datos Históricos":
     st.markdown("---")
 
     # ── Sección 2: Horas promedio por año ─────────────────────────────────
-    st.markdown('<div class="sec">⏱ Horas Promedio de Interrupción por Año (2018–2025)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Horas Promedio de Interrupción por Año (2018–2025)</div>',unsafe_allow_html=True)
     col3,col4=st.columns(2)
     with col3:
         hrs_m=resumen.copy()
@@ -639,15 +639,15 @@ elif pagina=="📊 Datos Históricos":
     st.markdown("---")
 
     # ── Sección 3: Tabla completa calculada desde BD ───────────────────────
-    st.markdown('<div class="sec">📋 Tabla Completa 2018–2025 (calculada desde BD)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Tabla Completa 2018–2025 (calculada desde BD)</div>',unsafe_allow_html=True)
     st.dataframe(tabla,use_container_width=True,hide_index=True)
     csv_tabla=tabla.to_csv(index=False).encode("utf-8")
-    st.download_button("⬇️ Descargar tabla CSV",csv_tabla,"historico_fallas.csv","text/csv")
+    st.download_button("Descargar tabla CSV",csv_tabla,"historico_fallas.csv","text/csv")
 
     st.markdown("---")
 
     # ── Sección 4: Tasas de falla 2018-2022 (hoja TD) ─────────────────────
-    st.markdown('<div class="sec">📈 Tasa de Falla Promedio Anual 2018–2022 (hoja TD)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Tasa de Falla Promedio Anual 2018–2022 (hoja TD)</div>',unsafe_allow_html=True)
     xl_td = pd.read_excel(EXCEL_PATH, sheet_name="TD")
     td = xl_td.iloc[2:7].copy()
     td.columns = ["_","_2","Año","E","FM","I","_3","_4","_5","_6"]
@@ -667,7 +667,7 @@ elif pagina=="📊 Datos Históricos":
     st.markdown("---")
 
     # ── Sección 5: Fallas por alimentador ─────────────────────────────────
-    st.markdown('<div class="sec">⚡ Fallas por Alimentador (2018–2025)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Fallas por Alimentador (2018–2025)</div>',unsafe_allow_html=True)
     nombres_alim={2:"Alim.2 Morza",6:"Alim.6 Zapallar",7:"Alim.7 Los Niches",
                   8:"Alim.8 Industrial",9:"Alim.9 Los Queñes",
                   10:"Alim.10 La Laguna",11:"Alim.11 La Obra"}
@@ -698,7 +698,7 @@ elif pagina=="📊 Datos Históricos":
     st.markdown("---")
 
     # ── Sección 6: Evolución mensual ───────────────────────────────────────
-    st.markdown('<div class="sec">📅 Evolución Mensual de Fallas (2018–2025)</div>',unsafe_allow_html=True)
+    st.markdown('<div class="sec">Evolución Mensual de Fallas (2018–2025)</div>',unsafe_allow_html=True)
     df_hist["Mes"]=df_hist["Inicio"].dt.to_period("M").astype(str)
     mensual=df_hist.groupby(["Mes","Calificacion"]).size().reset_index(name="Cantidad")
     mensual["Calificacion"]=mensual["Calificacion"].map({"E":"Externa","FM":"Fuerza Mayor","I":"Interna"})
@@ -712,8 +712,8 @@ elif pagina=="📊 Datos Históricos":
 # ══════════════════════════════════════════════════════════
 # PÁGINA 6 — ESTADÍSTICAS ACTUALES
 # ══════════════════════════════════════════════════════════
-elif pagina=="📈 Datos Actuales":
-    st.markdown("## 📈 Fallas Registradas en la App")
+elif pagina=="Datos Actuales":
+    st.markdown("## Fallas Registradas en la App")
     try:
         import plotly.express as px
     except:
@@ -721,15 +721,15 @@ elif pagina=="📈 Datos Actuales":
     with st.spinner("Cargando..."):
         dh=cargar_hist()
     if dh.empty or "Clasificacion" not in dh.columns:
-        st.info("📭 Sin registros aún. Registra algunas fallas primero.")
+        st.info("Sin registros aún. Registra algunas fallas primero.")
     else:
         dh["Fecha_hora"]=pd.to_datetime(dh["Fecha_hora"],errors="coerce")
         cnt=dh["Clasificacion"].value_counts()
         c1,c2,c3,c4=st.columns(4)
         c1.metric("Total",len(dh))
-        c2.metric("🔴 FM",cnt.get("FM",0))
-        c3.metric("🟡 Externa",cnt.get("E",0))
-        c4.metric("🟢 Interna",cnt.get("I",0))
+        c2.metric("FM",cnt.get("FM",0))
+        c3.metric("Externa",cnt.get("E",0))
+        c4.metric("Interna",cnt.get("I",0))
         st.markdown("---")
         col1,col2=st.columns(2)
         with col1:
@@ -770,22 +770,22 @@ elif pagina=="📈 Datos Actuales":
 
         st.markdown("---")
         # Exportar PDF básico
-        st.markdown("**📄 Exportar resumen:**")
+        st.markdown("**Exportar resumen:**")
         csv=dh.to_csv(index=False).encode("utf-8")
         buf=__import__("io").BytesIO()
         dh.to_excel(buf,index=False); buf.seek(0)
         cd1,cd2=st.columns(2)
         with cd1:
-            st.download_button("⬇️ Descargar CSV",csv,"datos_actuales.csv","text/csv")
+            st.download_button("Descargar CSV",csv,"datos_actuales.csv","text/csv")
         with cd2:
-            st.download_button("⬇️ Descargar Excel",buf,"datos_actuales.xlsx",
+            st.download_button("Descargar Excel",buf,"datos_actuales.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # ══════════════════════════════════════════════════════════
 # PÁGINA 7 — MAPA DE CALOR
 # ══════════════════════════════════════════════════════════
-elif pagina=="🔥 Mapa de Calor":
-    st.markdown("## 🔥 Mapa de Calor de Fallas")
+elif pagina=="Mapa de Calor":
+    st.markdown("## Mapa de Calor de Fallas")
     from folium.plugins import HeatMap
 
     xl3=pd.read_excel(EXCEL_PATH,sheet_name=None)
@@ -834,39 +834,39 @@ elif pagina=="🔥 Mapa de Calor":
 
     st.markdown("---")
     c1,c2,c3=st.columns(3)
-    for tipo,col,em in [("FM",c1,"🔴"),("E",c2,"🟡"),("I",c3,"🟢")]:
+    for tipo,col in [("FM",c1),("E",c2),("I",c3)]:
         n=len(df_f[df_f["Calificacion"]==tipo])
-        col.metric(f"{em} {tipo}",f"{n:,}",
+        col.metric(tipo,f"{n:,}",
                    f"{n/len(df_f)*100:.1f}%" if len(df_f)>0 else "0%")
 
-elif pagina=="ℹ️ Ayuda":
-    st.markdown("## ℹ️ Guía de uso")
-    with st.expander("📝 ¿Cómo registrar una falla?",expanded=True):
+elif pagina=="Ayuda":
+    st.markdown("## Guía de uso")
+    with st.expander("¿Cómo registrar una falla?",expanded=True):
         st.markdown("""
-        1. Ve a **📝 Registrar Falla**
+        1. Ve a **Registrar Falla**
         2. Ingresa tu **nombre** y selecciona tu **cuadrilla**
         3. Elige **Guiado** (categoría + subcausa) o **Manual** (texto libre)
         4. Si tienes coordenadas X e Y, ingrésalas (acepta punto y coma)
-        5. Presiona **🔍 Clasificar falla**
-        6. Revisa el resultado y presiona **💾 Guardar registro**
+        5. Presiona **Clasificar falla**
+        6. Revisa el resultado y presiona **Guardar registro**
         """)
-    with st.expander("📊 Tipos de falla"):
+    with st.expander("Tipos de falla"):
         st.markdown("""
         | Tipo | Código | Descripción |
         |------|--------|-------------|
-        | 🔴 Fuerza Mayor | FM | Accidentes, vandalismo, catástrofes |
-        | 🟡 Externa | E | Fallas en generación o transmisión |
-        | 🟢 Interna | I | Fallas propias de la red CEC |
+        | Fuerza Mayor | FM | Accidentes, vandalismo, catástrofes |
+        | Externa | E | Fallas en generación o transmisión |
+        | Interna | I | Fallas propias de la red CEC |
         """)
-    with st.expander("📍 Coordenadas y alimentadores"):
+    with st.expander("Coordenadas y alimentadores"):
         st.markdown("""
         - Usa las coordenadas **X e Y** del Excel (UTM zona 19S)
         - Acepta tanto punto (315569.5) como coma (315569,5)
         - El modelo KNN identifica el alimentador con ~90% de precisión
-        - 🟢 Alta (>80%) / 🟡 Media (50-80%) / 🔴 Baja (<50%)
+        - Alta (>80%) / Media (50-80%) / Baja (<50%)
         """)
-    with st.expander("💾 ¿Dónde se guardan los datos?"):
+    with st.expander("¿Dónde se guardan los datos?"):
         st.markdown("""
         Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
-        Puedes descargarlo como **CSV o Excel** desde la página **📋 Historial**.
+        Puedes descargarlo como **CSV o Excel** desde la página **Historial**.
         """)
