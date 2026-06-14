@@ -220,15 +220,48 @@ def id_alim(x,y):
             "dist_c":round(dc,1),"comunas":c["comunas"],
             "votos":{int(a):round(p*100,1) for a,p in proba.items() if p>0.01}}
 
+import requests, base64, json
+
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+GITHUB_REPO  = st.secrets["GITHUB_REPO"]
+ARCHIVO_CSV  = "fallas_ingresadas.csv"
+
 def cargar_hist():
-    if os.path.exists(ARCHIVO_OUT): return pd.read_excel(ARCHIVO_OUT)
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        contenido = base64.b64decode(r.json()["content"]).decode("utf-8")
+        from io import StringIO
+        return pd.read_csv(StringIO(contenido))
     return pd.DataFrame()
 
 def guardar(fila):
-    dh=cargar_hist(); n=len(dh)+1
-    fila["N°"]=n; fila["Fecha_hora"]=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    dh=pd.concat([dh,pd.DataFrame([fila])],ignore_index=True)
-    dh.to_excel(ARCHIVO_OUT,index=False); return n
+    dh = cargar_hist()
+    n  = len(dh) + 1
+    fila["N°"] = n
+    fila["Fecha_hora"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dh = pd.concat([dh, pd.DataFrame([fila])], ignore_index=True)
+
+    csv_str  = dh.to_csv(index=False)
+    contenido_b64 = base64.b64encode(csv_str.encode()).decode()
+
+    url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    # Obtener SHA del archivo si ya existe
+    r = requests.get(url, headers=headers)
+    sha = r.json().get("sha", None) if r.status_code == 200 else None
+
+    payload = {
+        "message": f"Registro N°{n} — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        "content": contenido_b64,
+    }
+    if sha:
+        payload["sha"] = sha
+
+    requests.put(url, headers=headers, data=json.dumps(payload))
+    return n
 
 # ─── Página 1: Registrar Falla ────────────────────────────
 if pagina=="📝 Registrar Falla":
