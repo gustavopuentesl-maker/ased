@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 
-warnings.filterwarnings("ignore") 
+warnings.filterwarnings("ignore")
 
 # ─── Configuración página ─────────────────────────────────
 st.set_page_config(page_title="Clasificador Fallas CEC",page_icon="⚡",layout="wide")
@@ -37,6 +37,10 @@ EXCEL_PATH   = "Estadisticas_de_Interrupciones.xlsx"
 ETIQUETAS    = {"FM":"🔴 Fuerza Mayor","E":"🟡 Externa","I":"🟢 Interna"}
 COLORES      = {"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"}
 COLORES_ALIM = {2:"blue",6:"red",7:"green",8:"purple",9:"orange",10:"darkblue"}
+
+# ─── Comunas disponibles ──────────────────────────────
+COMUNAS = ["Curicó","Teno","Molina","Romeral","Chimbarongo","Otra"]
+TENSIONES = ["MT","BT"]
 
 CUADRILLAS = [
     "Cuadrilla 1 — Curicó Norte","Cuadrilla 2 — Curicó Sur",
@@ -154,8 +158,8 @@ with st.sidebar:
         if os.path.exists("logo_udec.png"):
             st.image("logo_udec.png",width=100)
     with col_l2:
-        if os.path.exists("logo_cec.jpg"):
-            st.image("logo_cec.jpg",width=100)
+        if os.path.exists("logo_cec.png"):
+            st.image("logo_cec.png",width=100)
     st.markdown("---")
     st.markdown("# ⚡ CEC Fallas")
     st.markdown("🌐 [Sitio web CEC](https://cecltda.cl/)")
@@ -166,15 +170,17 @@ with st.sidebar:
         st.success("✅ Sistema conectado")
     st.markdown("---")
     pagina=st.radio("Navegación:",[
-        "📝 Registrar Falla","📋 Historial","🗺 Mapa General","ℹ️ Ayuda"])
+        "📝 Registrar Falla","📋 Historial",
+        "📊 Datos Históricos","📈 Datos Actuales",
+        "🔥 Mapa de Calor","🗺 Mapa General","ℹ️ Ayuda"])
     st.markdown("---")
     st.markdown("""
-    <div style='font-size:15px;color:#888;text-align:center;padding:10px 0'>
+    <div style='font-size:11px;color:#888;text-align:center;padding:10px 0'>
         <b>Desarrollado por:</b><br><br>
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
+        <a href='https://www.linkedin.com/in/PERFIL-SOFIA'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Sofía Nahuelpán Álvarez</a><br><br>
         <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
@@ -289,7 +295,53 @@ if pagina=="📝 Registrar Falla":
         desc=st.text_area("Descripción:",placeholder="Ej: Se abre reconectador RCU5724...",height=100)
         cat="Manual"; sub="Manual"
     st.markdown("---")
-    st.markdown('<div class="sec">📍 Sección 3 — Coordenadas UTM zona 19S (opcional)</div>',unsafe_allow_html=True)
+
+    # Sección 3: Datos técnicos
+    st.markdown('<div class="sec">🔧 Sección 3 — Datos técnicos del evento</div>',unsafe_allow_html=True)
+    d1,d2,d3 = st.columns(3)
+    with d1:
+        trafos = st.number_input("Trafos afectados:",min_value=0,value=0,step=1)
+        kva    = st.number_input("KVA:",min_value=0.0,value=0.0,step=0.5,format="%.1f")
+    with d2:
+        clientes = st.number_input("Clientes afectados:",min_value=0,value=0,step=1)
+        comuna_sel = st.selectbox("Comuna:",COMUNAS)
+    with d3:
+        tension_sel = st.selectbox("Tipo de tensión:",TENSIONES)
+        comuna_id   = st.text_input("Comuna ID:",placeholder="Ej: 7301")
+
+    st.markdown("---")
+
+    # Sección 4: Fecha/hora y duración
+    st.markdown('<div class="sec">🕐 Sección 4 — Fechas y duración</div>',unsafe_allow_html=True)
+    f1,f2,f3 = st.columns(3)
+    with f1:
+        fecha_inicio = st.date_input("Fecha inicio:")
+        hora_inicio  = st.time_input("Hora inicio:",step=60)
+    with f2:
+        fecha_fin = st.date_input("Fecha fin:")
+        hora_fin  = st.time_input("Hora fin:",step=60)
+    with f3:
+        dt_ini = datetime.combine(fecha_inicio, hora_inicio)
+        dt_fin = datetime.combine(fecha_fin, hora_fin)
+        dur_min = max(0, (dt_fin - dt_ini).total_seconds() / 60)
+        dur_hrs = dur_min / 60
+        st.metric("Duración calculada", f"{dur_hrs:.2f} hrs")
+        st.caption(f"= {dur_min:.0f} minutos")
+
+    st.markdown("---")
+
+    # Sección 5: Foto
+    st.markdown('<div class="sec">📷 Sección 5 — Foto de la falla (opcional)</div>',unsafe_allow_html=True)
+    foto = st.file_uploader("Sube una foto desde tu dispositivo:",
+                            type=["jpg","jpeg","png"],
+                            help="Puedes tomar la foto desde el celular y subirla aquí")
+    if foto:
+        st.image(foto, caption="Vista previa", width=300)
+
+    st.markdown("---")
+
+    # Sección 6: Coordenadas
+    st.markdown('<div class="sec">📍 Sección 6 — Coordenadas UTM zona 19S (opcional)</div>',unsafe_allow_html=True)
     cx,cy,ci=st.columns([2,2,3])
     with cx:
         xv_str=st.text_input("X — Este:",placeholder="Ej: 315569.5",key="coord_x")
@@ -317,7 +369,12 @@ if pagina=="📝 Registrar Falla":
             rg=id_alim(x_coord,y_coord)
             st.session_state["ultimo"]={"usuario":usuario,"cuadrilla":cuadrilla,
                 "desc":desc,"cat":cat,"sub":sub,"modo":modo,
-                "rf":rf,"rg":rg,"x":x_coord,"y":y_coord}
+                "rf":rf,"rg":rg,"x":x_coord,"y":y_coord,
+                "trafos":trafos,"kva":kva,"clientes":clientes,
+                "comuna":comuna_sel,"comuna_id":comuna_id,"tension":tension_sel,
+                "inicio":dt_ini.strftime("%Y-%m-%d %H:%M"),
+                "fin":dt_fin.strftime("%Y-%m-%d %H:%M"),
+                "dur_hrs":round(dur_hrs,2)}
             st.session_state["mostrar"]=True
     if st.session_state.get("mostrar") and st.session_state.get("ultimo"):
         u=st.session_state["ultimo"]; rf=u["rf"]; rg=u["rg"]
@@ -375,11 +432,20 @@ if pagina=="📝 Registrar Falla":
                     "Clasificacion":rf["pred"],
                     "Tipo_Falla":ETIQUETAS[rf["pred"]].split(" ",1)[1],
                     "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
+                    "Trafos_afectados":u.get("trafos",""),
+                    "KVA":u.get("kva",""),
+                    "Clientes_afectados":u.get("clientes",""),
+                    "Comuna":u.get("comuna",""),
+                    "Comuna_ID":u.get("comuna_id",""),
+                    "Tension":u.get("tension",""),
+                    "Inicio":u.get("inicio",""),
+                    "Fin":u.get("fin",""),
+                    "Duracion_hrs":u.get("dur_hrs",""),
                     "X_UTM":x_coord or "","Y_UTM":y_coord or "",
                     "Alimentador":rg["alim"] if rg else "",
                     "Confianza_Alim_%":rg["conf"] if rg else "",
                     "Dist_punto_m":rg["dist_p"] if rg else "",
-                    "Comunas":rg["comunas"] if rg else ""})
+                    "Comunas_alim":rg["comunas"] if rg else ""})
             st.success(f"✅ Registro N°{n} guardado en GitHub → {ARCHIVO_CSV}")
             st.session_state["mostrar"]=False
             st.session_state["ultimo"]={}
@@ -453,6 +519,225 @@ elif pagina=="🗺 Mapa General":
 # ══════════════════════════════════════════════════════════
 # PÁGINA 4 — AYUDA
 # ══════════════════════════════════════════════════════════
+
+# ══════════════════════════════════════════════════════════
+# PÁGINA 5 — ESTADÍSTICAS HISTÓRICAS
+# ══════════════════════════════════════════════════════════
+elif pagina=="📊 Datos Históricos":
+    st.markdown("## 📊 Estadísticas Históricas de Fallas")
+    try:
+        import plotly.express as px
+    except:
+        st.error("Instala plotly: pip install plotly"); st.stop()
+
+    xl2 = pd.read_excel(EXCEL_PATH, sheet_name=None)
+
+    # Tasas anuales
+    st.markdown('<div class="sec">📈 Tasa de Falla Promedio Anual</div>',unsafe_allow_html=True)
+    td = xl2["TD"].iloc[2:7].copy()
+    td.columns = ["_","_2","Año","E","FM","I","_3","_4","_5","_6"]
+    td = td[["Año","E","FM","I"]].dropna()
+    td["Año"]=td["Año"].astype(int)
+    for c in ["E","FM","I"]: td[c]=pd.to_numeric(td[c],errors="coerce")
+    td_m = td.melt(id_vars="Año",value_vars=["E","FM","I"],var_name="Tipo",value_name="Tasa")
+    fig1=px.bar(td_m,x="Año",y="Tasa",color="Tipo",barmode="group",
+                color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                title="Tasa de falla promedio anual por tipo")
+    fig1.update_layout(plot_bgcolor="white",paper_bgcolor="white")
+    st.plotly_chart(fig1,use_container_width=True)
+
+    col1,col2=st.columns(2)
+    with col1:
+        st.dataframe(td.rename(columns={"E":"Externa","FM":"Fuerza Mayor","I":"Interna"}),
+                     use_container_width=True,hide_index=True)
+    with col2:
+        fig_pie=px.pie(values=[td["FM"].mean(),td["E"].mean(),td["I"].mean()],
+                       names=["Fuerza Mayor","Externa","Interna"],
+                       color_discrete_sequence=["#e74c3c","#f39c12","#27ae60"],
+                       title="Proporción promedio histórica")
+        st.plotly_chart(fig_pie,use_container_width=True)
+
+    st.markdown("---")
+
+    # Fallas por alimentador
+    st.markdown('<div class="sec">⚡ Cantidad y Horas de Falla por Alimentador</div>',unsafe_allow_html=True)
+    fs=xl2["Fallas del sistema"].iloc[2:8].copy()
+    fs.columns=["_","Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM","_2","_3"]
+    fs=fs[["Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]].dropna()
+    fs["Alimentador"]=fs["Alimentador"].astype(int).astype(str)
+    for c in ["Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]:
+        fs[c]=pd.to_numeric(fs[c],errors="coerce")
+
+    col3,col4=st.columns(2)
+    with col3:
+        fs_c=fs.melt(id_vars="Alimentador",value_vars=["Externas","Internas","FM"],
+                     var_name="Tipo",value_name="Cantidad")
+        fig2=px.bar(fs_c,x="Alimentador",y="Cantidad",color="Tipo",barmode="stack",
+                    color_discrete_map={"FM":"#e74c3c","Externas":"#f39c12","Internas":"#27ae60"},
+                    title="Cantidad de fallas por alimentador")
+        fig2.update_layout(plot_bgcolor="white")
+        st.plotly_chart(fig2,use_container_width=True)
+    with col4:
+        fs_h=fs.melt(id_vars="Alimentador",value_vars=["Horas_E","Horas_I","Horas_FM"],
+                     var_name="Tipo",value_name="Horas")
+        fs_h["Tipo"]=fs_h["Tipo"].map({"Horas_E":"Externa","Horas_I":"Interna","Horas_FM":"FM"})
+        fig3=px.bar(fs_h,x="Alimentador",y="Horas",color="Tipo",barmode="stack",
+                    color_discrete_map={"FM":"#e74c3c","Externa":"#f39c12","Interna":"#27ae60"},
+                    title="Horas con falla por alimentador")
+        fig3.update_layout(plot_bgcolor="white")
+        st.plotly_chart(fig3,use_container_width=True)
+
+    st.markdown("---")
+
+    # Evolución mensual
+    st.markdown('<div class="sec">📅 Evolución Mensual de Fallas</div>',unsafe_allow_html=True)
+    raw2=xl2["BD"].iloc[1:].copy()
+    raw2.columns=["_","INC","Alimentador","Trafos","KVA","Clientes","Inicio","Fin",
+                  "Duracion","Causa","Calificacion","Comuna_id","Comuna","Tension",
+                  "X","Y","Descripcion","Validacion","año","Falta_coord"]
+    raw2["Calificacion"]=raw2["Calificacion"].str.strip().str.upper()
+    raw2["Inicio"]=pd.to_datetime(raw2["Inicio"],errors="coerce")
+    raw2=raw2.dropna(subset=["Inicio","Calificacion"])
+    raw2=raw2[raw2["Calificacion"].isin(["I","FM","E"])]
+    raw2["Mes"]=raw2["Inicio"].dt.to_period("M").astype(str)
+    mensual=raw2.groupby(["Mes","Calificacion"]).size().reset_index(name="Cantidad")
+    fig4=px.line(mensual,x="Mes",y="Cantidad",color="Calificacion",
+                 color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                 title="Evolución mensual histórica",
+                 labels={"Calificacion":"Tipo"})
+    fig4.update_layout(plot_bgcolor="white",xaxis_tickangle=-45)
+    st.plotly_chart(fig4,use_container_width=True)
+
+# ══════════════════════════════════════════════════════════
+# PÁGINA 6 — ESTADÍSTICAS ACTUALES
+# ══════════════════════════════════════════════════════════
+elif pagina=="📈 Datos Actuales":
+    st.markdown("## 📈 Fallas Registradas en la App")
+    try:
+        import plotly.express as px
+    except:
+        st.error("Instala plotly"); st.stop()
+    with st.spinner("Cargando..."):
+        dh=cargar_hist()
+    if dh.empty or "Clasificacion" not in dh.columns:
+        st.info("📭 Sin registros aún. Registra algunas fallas primero.")
+    else:
+        dh["Fecha_hora"]=pd.to_datetime(dh["Fecha_hora"],errors="coerce")
+        cnt=dh["Clasificacion"].value_counts()
+        c1,c2,c3,c4=st.columns(4)
+        c1.metric("Total",len(dh))
+        c2.metric("🔴 FM",cnt.get("FM",0))
+        c3.metric("🟡 Externa",cnt.get("E",0))
+        c4.metric("🟢 Interna",cnt.get("I",0))
+        st.markdown("---")
+        col1,col2=st.columns(2)
+        with col1:
+            fig1=px.pie(dh,names="Clasificacion",
+                        color="Clasificacion",
+                        color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                        title="Distribución de tipos de falla")
+            st.plotly_chart(fig1,use_container_width=True)
+        with col2:
+            if "Cuadrilla" in dh.columns:
+                qc=dh["Cuadrilla"].value_counts().reset_index()
+                qc.columns=["Cuadrilla","N"]
+                fig2=px.bar(qc,x="Cuadrilla",y="N",title="Fallas por cuadrilla",
+                            color_discrete_sequence=["#3498db"])
+                fig2.update_layout(plot_bgcolor="white",xaxis_tickangle=-30)
+                st.plotly_chart(fig2,use_container_width=True)
+        if "Alimentador" in dh.columns:
+            st.markdown("---")
+            dh2=dh[dh["Alimentador"].astype(str)!=""]
+            if len(dh2)>0:
+                ac=dh2.groupby(["Alimentador","Clasificacion"]).size().reset_index(name="N")
+                fig3=px.bar(ac,x="Alimentador",y="N",color="Clasificacion",barmode="stack",
+                            color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                            title="Fallas por alimentador")
+                fig3.update_layout(plot_bgcolor="white")
+                st.plotly_chart(fig3,use_container_width=True)
+        if "Duracion_hrs" in dh.columns:
+            st.markdown("---")
+            dh["Duracion_hrs"]=pd.to_numeric(dh["Duracion_hrs"],errors="coerce")
+            dur_tipo=dh.groupby("Clasificacion")["Duracion_hrs"].mean().reset_index()
+            dur_tipo.columns=["Tipo","Duración promedio (hrs)"]
+            fig4=px.bar(dur_tipo,x="Tipo",y="Duración promedio (hrs)",
+                        color="Tipo",
+                        color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                        title="Duración promedio por tipo de falla")
+            fig4.update_layout(plot_bgcolor="white")
+            st.plotly_chart(fig4,use_container_width=True)
+
+        st.markdown("---")
+        # Exportar PDF básico
+        st.markdown("**📄 Exportar resumen:**")
+        csv=dh.to_csv(index=False).encode("utf-8")
+        buf=__import__("io").BytesIO()
+        dh.to_excel(buf,index=False); buf.seek(0)
+        cd1,cd2=st.columns(2)
+        with cd1:
+            st.download_button("⬇️ Descargar CSV",csv,"datos_actuales.csv","text/csv")
+        with cd2:
+            st.download_button("⬇️ Descargar Excel",buf,"datos_actuales.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+# ══════════════════════════════════════════════════════════
+# PÁGINA 7 — MAPA DE CALOR
+# ══════════════════════════════════════════════════════════
+elif pagina=="🔥 Mapa de Calor":
+    st.markdown("## 🔥 Mapa de Calor de Fallas")
+    from folium.plugins import HeatMap
+
+    xl3=pd.read_excel(EXCEL_PATH,sheet_name=None)
+    raw3=xl3["BD"].iloc[1:].copy()
+    raw3.columns=["_","INC","Alimentador","Trafos","KVA","Clientes","Inicio","Fin",
+                  "Duracion","Causa","Calificacion","Comuna_id","Comuna","Tension",
+                  "X","Y","Descripcion","Validacion","año","Falta_coord"]
+    def tf2(v):
+        try: return float(str(v).replace(",","."))
+        except: return np.nan
+    raw3["X_f"]=raw3["X"].apply(tf2); raw3["Y_f"]=raw3["Y"].apply(tf2)
+    raw3["Calificacion"]=raw3["Calificacion"].str.strip().str.upper()
+    raw3.loc[(raw3["X_f"]<280000)|(raw3["X_f"]>380000),"X_f"]=np.nan
+    raw3.loc[(raw3["Y_f"]<6080000)|(raw3["Y_f"]>6160000),"Y_f"]=np.nan
+    df_hm=raw3.dropna(subset=["X_f","Y_f","Calificacion"]).copy()
+    df_hm=df_hm[df_hm["Calificacion"].isin(["I","FM","E"])]
+    df_hm["año"]=pd.to_numeric(df_hm["año"],errors="coerce")
+
+    col_f,col_a=st.columns([3,1])
+    with col_a:
+        st.markdown("**Filtros:**")
+        tipos=st.multiselect("Tipo:",["FM","E","I"],default=["FM","E","I"])
+        alims=sorted(df_hm["Alimentador"].dropna().astype(int).unique().tolist())
+        alim_sel=st.multiselect("Alimentador:",alims,default=alims)
+        años=sorted(df_hm["año"].dropna().astype(int).unique().tolist())
+        yr=st.select_slider("Años:",options=años,value=(min(años),max(años)))
+        radio=st.slider("Radio puntos:",5,25,15)
+        blur=st.slider("Difuminado:",5,20,10)
+
+    df_f=df_hm[
+        (df_hm["Calificacion"].isin(tipos)) &
+        (df_hm["Alimentador"].astype(float).astype(int).isin(alim_sel)) &
+        (df_hm["año"].between(yr[0],yr[1]))
+    ]
+
+    with col_f:
+        st.markdown(f"**{len(df_f):,} fallas en el mapa** | {yr[0]}–{yr[1]}")
+        m2=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+        pts=[]
+        for _,row in df_f.iterrows():
+            la,lo=u2l(row["X_f"],row["Y_f"])
+            pts.append([la,lo])
+        if pts:
+            HeatMap(pts,radius=radio,blur=blur,min_opacity=0.3).add_to(m2)
+        st_folium(m2,width=680,height=480)
+
+    st.markdown("---")
+    c1,c2,c3=st.columns(3)
+    for tipo,col,em in [("FM",c1,"🔴"),("E",c2,"🟡"),("I",c3,"🟢")]:
+        n=len(df_f[df_f["Calificacion"]==tipo])
+        col.metric(f"{em} {tipo}",f"{n:,}",
+                   f"{n/len(df_f)*100:.1f}%" if len(df_f)>0 else "0%")
+
 elif pagina=="ℹ️ Ayuda":
     st.markdown("## ℹ️ Guía de uso")
     with st.expander("📝 ¿Cómo registrar una falla?",expanded=True):
@@ -476,8 +761,11 @@ elif pagina=="ℹ️ Ayuda":
         st.markdown("""
         - Usa las coordenadas **X e Y** del Excel (UTM zona 19S)
         - Acepta tanto punto (315569.5) como coma (315569,5)
+        - El modelo KNN identifica el alimentador con ~90% de precisión
+        - 🟢 Alta (>80%) / 🟡 Media (50-80%) / 🔴 Baja (<50%)
         """)
     with st.expander("💾 ¿Dónde se guardan los datos?"):
         st.markdown("""
+        Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
         Puedes descargarlo como **CSV o Excel** desde la página **📋 Historial**.
         """)
