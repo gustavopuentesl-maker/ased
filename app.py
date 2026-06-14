@@ -180,7 +180,7 @@ with st.sidebar:
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/PERFIL-SOFIA'
+        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Sofía Nahuelpán Álvarez</a><br><br>
         <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
