@@ -389,6 +389,15 @@ if pagina=="📝 Registrar Falla":
 # ══════════════════════════════════════════════════════════
 elif pagina=="📋 Historial":
     st.markdown("## 📋 Historial de Fallas")
+    # DEBUG temporal
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    r = requests.get(url, headers=headers)
+    st.write("Status GitHub:", r.status_code)
+    if r.status_code == 200:
+        st.write("Archivo encontrado, tamaño:", r.json().get("size"), "bytes")
+    else:
+        st.write("Error:", r.json())
     with st.spinner("Cargando historial desde GitHub..."):
         dh=cargar_hist()
     if dh.empty:
