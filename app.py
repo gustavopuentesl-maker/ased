@@ -134,11 +134,12 @@ def cargar_hist():
         return pd.read_csv(StringIO(contenido))
     return pd.DataFrame()
 
-def guardar(fila):
+def guardar(fila, foto_bytes=None, foto_nombre=None):
     dh  = cargar_hist()
     n   = len(dh) + 1
     fila["N°"]         = n
     fila["Fecha_hora"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    fila["Foto"]       = f"fotos/registro_{n}.jpg" if foto_bytes else ""
     dh  = pd.concat([dh, pd.DataFrame([fila])], ignore_index=True)
     csv_b64 = base64.b64encode(dh.to_csv(index=False).encode()).decode()
     url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
@@ -149,6 +150,14 @@ def guardar(fila):
                "content":csv_b64}
     if sha: payload["sha"] = sha
     requests.put(url, headers=headers, data=json.dumps(payload))
+    if foto_bytes:
+        foto_b64 = base64.b64encode(foto_bytes).decode()
+        url_foto = f"https://api.github.com/repos/{GITHUB_REPO}/contents/fotos/registro_{n}.jpg"
+        r_foto   = requests.get(url_foto, headers=headers)
+        sha_foto = r_foto.json().get("sha") if r_foto.status_code == 200 else None
+        payload_foto = {"message":f"Foto registro N°{n}","content":foto_b64}
+        if sha_foto: payload_foto["sha"] = sha_foto
+        requests.put(url_foto, headers=headers, data=json.dumps(payload_foto))
     return n
 
 # ─── Sidebar ──────────────────────────────────────────────
@@ -175,12 +184,12 @@ with st.sidebar:
         "🔥 Mapa de Calor","🗺 Mapa General","ℹ️ Ayuda"])
     st.markdown("---")
     st.markdown("""
-    <div style='font-size:15px;color:#888;text-align:center;padding:10px 0'>
+    <div style='font-size:11px;color:#888;text-align:center;padding:10px 0'>
         <b>Desarrollado por:</b><br><br>
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
+        <a href='https://www.linkedin.com/in/PERFIL-SOFIA'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Sofía Nahuelpán Álvarez</a><br><br>
         <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
@@ -367,6 +376,8 @@ if pagina=="📝 Registrar Falla":
             x_coord=float(xv) if xv>1000 else None
             y_coord=float(yv) if yv>1000 else None
             rg=id_alim(x_coord,y_coord)
+            foto_bytes_val = foto.read() if foto else None
+            foto_nombre_val = foto.name if foto else None
             st.session_state["ultimo"]={"usuario":usuario,"cuadrilla":cuadrilla,
                 "desc":desc,"cat":cat,"sub":sub,"modo":modo,
                 "rf":rf,"rg":rg,"x":x_coord,"y":y_coord,
@@ -374,7 +385,9 @@ if pagina=="📝 Registrar Falla":
                 "comuna":comuna_sel,"comuna_id":comuna_id,"tension":tension_sel,
                 "inicio":dt_ini.strftime("%Y-%m-%d %H:%M"),
                 "fin":dt_fin.strftime("%Y-%m-%d %H:%M"),
-                "dur_hrs":round(dur_hrs,2)}
+                "dur_hrs":round(dur_hrs,2),
+                "foto_bytes":foto_bytes_val,
+                "foto_nombre":foto_nombre_val}
             st.session_state["mostrar"]=True
     if st.session_state.get("mostrar") and st.session_state.get("ultimo"):
         u=st.session_state["ultimo"]; rf=u["rf"]; rg=u["rg"]
@@ -422,6 +435,9 @@ if pagina=="📝 Registrar Falla":
                 st_folium(m,width=700,height=400)
         else:
             st.info("📍 Sin coordenadas — no se identificó alimentador.")
+        if u.get("foto_bytes"):
+            st.markdown("**📷 Foto adjunta:**")
+            st.image(u["foto_bytes"], width=300)
         st.markdown("---")
         if st.button("💾 Guardar registro",type="primary"):
             with st.spinner("Guardando en GitHub..."):
@@ -445,7 +461,9 @@ if pagina=="📝 Registrar Falla":
                     "Alimentador":rg["alim"] if rg else "",
                     "Confianza_Alim_%":rg["conf"] if rg else "",
                     "Dist_punto_m":rg["dist_p"] if rg else "",
-                    "Comunas_alim":rg["comunas"] if rg else ""})
+                    "Comunas_alim":rg["comunas"] if rg else ""},
+                    foto_bytes=u.get("foto_bytes"),
+                    foto_nombre=u.get("foto_nombre"))
             st.success(f"✅ Registro N°{n} guardado en GitHub → {ARCHIVO_CSV}")
             st.session_state["mostrar"]=False
             st.session_state["ultimo"]={}
