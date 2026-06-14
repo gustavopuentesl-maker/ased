@@ -564,7 +564,7 @@ elif pagina=="📊 Datos Históricos":
     fs=xl2["Fallas del sistema"].iloc[2:8].copy()
     fs.columns=["_","Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM","_2","_3"]
     fs=fs[["Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]].dropna()
-    fs["Alimentador"]=fs["Alimentador"].astype(int).astype(str)
+    fs["Alimentador"]=pd.to_numeric(fs["Alimentador"],errors="coerce").dropna().astype(int).astype(str)
     for c in ["Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]:
         fs[c]=pd.to_numeric(fs[c],errors="coerce")
 
