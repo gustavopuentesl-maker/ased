@@ -155,7 +155,7 @@ with st.sidebar:
             st.image("logo_udec.png",width=100)
     with col_l2:
         if os.path.exists("logo_cec.jpg"):
-            st.image("logo_cec.png",width=100)
+            st.image("logo_cec.jpg",width=100)
     st.markdown("---")
     st.markdown("# ⚡ CEC Fallas")
     st.markdown("🌐 [Sitio web CEC](https://cecltda.cl/)")
