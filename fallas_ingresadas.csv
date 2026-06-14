@@ -1,2 +1,3 @@
 Usuario,Cuadrilla,Descripcion,Categoria,Subcausa,Modo,Clasificacion,Tipo_Falla,Confianza_%,Prob_FM,Prob_E,Prob_I,X_UTM,Y_UTM,Alimentador,Confianza_Alim_%,Dist_punto_m,Comunas,N°,Fecha_hora
 juan,Cuadrilla 1 — Curicó Norte,Caída de árbol sobre red MT/BT,🌿 Árboles / Vegetación,Caída de árbol sobre la red,Guiado,I,Interna,82.8,15.4,1.8,82.8,,,,,,,1,2026-06-14 02:38:05
+juan,Cuadrilla 1 — Curicó Norte,Caída de árbol sobre red MT/BT,🌿 Árboles / Vegetación,Caída de árbol sobre la red,Guiado,I,Interna,82.8,15.4,1.8,82.8,311895.562,6147369.879,2.0,100.0,0.0,"Chimbarongo, Teno",2,2026-06-14 02:42:25
