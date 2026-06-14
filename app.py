@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore") 
 
 # ─── Configuración página ─────────────────────────────────
 st.set_page_config(page_title="Clasificador Fallas CEC",page_icon="⚡",layout="wide")
