@@ -1,7 +1,8 @@
 import streamlit as st
-import os, re, warnings
+import os, re, warnings, requests, base64, json
 import numpy as np
 import pandas as pd
+from io import StringIO
 from datetime import datetime
 from pyproj import Transformer
 import folium
@@ -13,7 +14,7 @@ from sklearn.pipeline import Pipeline
 
 warnings.filterwarnings("ignore")
 
-# ─── Configuración ────────────────────────────────────────
+# ─── Configuración página ─────────────────────────────────
 st.set_page_config(page_title="Clasificador Fallas CEC",page_icon="⚡",layout="wide")
 st.markdown("""<style>
 .resultado-FM{border-left:5px solid #e74c3c;background:#fdf0ef;border-radius:8px;padding:14px;margin:10px 0}
@@ -26,21 +27,25 @@ st.markdown("""<style>
 .sec{font-size:16px;font-weight:bold;color:#2c3e50;border-bottom:2px solid #3498db;padding-bottom:4px;margin-bottom:10px}
 </style>""",unsafe_allow_html=True)
 
-# ─── Rutas de archivos ────────────────────────────────────
-EXCEL_PATH  = "Estadisticas_de_Interrupciones.xlsx"
-ARCHIVO_OUT = "fallas_ingresadas.xlsx"
+# ─── Configuración GitHub ─────────────────────────────────
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+GITHUB_REPO  = st.secrets["GITHUB_REPO"]
+ARCHIVO_CSV  = "fallas_ingresadas.csv"
+EXCEL_PATH   = "Estadisticas_de_Interrupciones.xlsx"
 
 # ─── Constantes ───────────────────────────────────────────
-ETIQUETAS={"FM":"🔴 Fuerza Mayor","E":"🟡 Externa","I":"🟢 Interna"}
-COLORES={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"}
-COLORES_ALIM={2:"blue",6:"red",7:"green",8:"purple",9:"orange",10:"darkblue"}
+ETIQUETAS    = {"FM":"🔴 Fuerza Mayor","E":"🟡 Externa","I":"🟢 Interna"}
+COLORES      = {"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"}
+COLORES_ALIM = {2:"blue",6:"red",7:"green",8:"purple",9:"orange",10:"darkblue"}
 
-CUADRILLAS=["Cuadrilla 1 — Curicó Norte","Cuadrilla 2 — Curicó Sur",
-            "Cuadrilla 3 — Teno","Cuadrilla 4 — Molina",
-            "Cuadrilla 5 — Romeral","Cuadrilla 6 — Chimbarongo",
-            "Cuadrilla 7 — Emergencia","Otra (escribir abajo)"]
+CUADRILLAS = [
+    "Cuadrilla 1 — Curicó Norte","Cuadrilla 2 — Curicó Sur",
+    "Cuadrilla 3 — Teno","Cuadrilla 4 — Molina",
+    "Cuadrilla 5 — Romeral","Cuadrilla 6 — Chimbarongo",
+    "Cuadrilla 7 — Emergencia","Otra (escribir abajo)",
+]
 
-CAUSAS={
+CAUSAS = {
     "🌿 Árboles / Vegetación":{"cal":"I","subs":[
         ("Caída de árbol sobre la red","Caída de árbol sobre red MT/BT"),
         ("Caída de gancho o rama","Caída de rama o gancho sobre conductor"),
@@ -115,6 +120,33 @@ CAUSAS={
         ("Otro cliente","Instalación cliente — no especificada")]},
 }
 
+# ─── Funciones GitHub ─────────────────────────────────────
+def cargar_hist():
+    url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    r       = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        contenido = base64.b64decode(r.json()["content"]).decode("utf-8")
+        return pd.read_csv(StringIO(contenido))
+    return pd.DataFrame()
+
+def guardar(fila):
+    dh  = cargar_hist()
+    n   = len(dh) + 1
+    fila["N°"]         = n
+    fila["Fecha_hora"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dh  = pd.concat([dh, pd.DataFrame([fila])], ignore_index=True)
+    csv_b64 = base64.b64encode(dh.to_csv(index=False).encode()).decode()
+    url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}","Content-Type":"application/json"}
+    r       = requests.get(url, headers=headers)
+    sha     = r.json().get("sha") if r.status_code == 200 else None
+    payload = {"message":f"Registro N°{n} — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+               "content":csv_b64}
+    if sha: payload["sha"] = sha
+    requests.put(url, headers=headers, data=json.dumps(payload))
+    return n
+
 # ─── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
     col_l1,col_l2=st.columns(2)
@@ -137,14 +169,17 @@ with st.sidebar:
         "📝 Registrar Falla","📋 Historial","🗺 Mapa General","ℹ️ Ayuda"])
     st.markdown("---")
     st.markdown("""
-    <div style='font-size:14px;color:#888;text-align:center;padding:10px 0'>
+    <div style='font-size:15px;color:#888;text-align:center;padding:10px 0'>
         <b>Desarrollado por:</b><br><br>
-        <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a' target='_blank'
-           style='color:#0077b5;text-decoration:none'>👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351' target='_blank'
-           style='color:#0077b5;text-decoration:none'>👤 Sofía Nahuelpán Álvarez</a><br><br>
-        <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN' target='_blank'
-           style='color:#0077b5;text-decoration:none'>👤 Sebastián Castro Astudillo</a><br><br>
+        <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
+           target='_blank' style='color:#0077b5;text-decoration:none'>
+           👤 Gustavo Puentes Lermanda</a><br><br>
+        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
+           target='_blank' style='color:#0077b5;text-decoration:none'>
+           👤 Sofía Nahuelpán Álvarez</a><br><br>
+        <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
+           target='_blank' style='color:#0077b5;text-decoration:none'>
+           👤 Sebastián Castro Astudillo</a><br><br>
         <i>Depto. Ingeniería Eléctrica<br>Universidad de Concepción</i>
     </div>
     """,unsafe_allow_html=True)
@@ -156,8 +191,8 @@ def cargar_modelos(path):
     def tf(v):
         try: return float(str(v).replace(",","."))
         except: return np.nan
-    xl=pd.read_excel(path,sheet_name=None)
-    raw=xl["BD"].iloc[1:].copy()
+    xl  = pd.read_excel(path,sheet_name=None)
+    raw = xl["BD"].iloc[1:].copy()
     raw.columns=["_","INC","Alimentador","Trafos","KVA","Clientes","Inicio","Fin",
                  "Duracion","Causa","Calificacion","Comuna_id","Comuna","Tension",
                  "X","Y","Descripcion","Validacion","año","Falta_coord"]
@@ -220,50 +255,9 @@ def id_alim(x,y):
             "dist_c":round(dc,1),"comunas":c["comunas"],
             "votos":{int(a):round(p*100,1) for a,p in proba.items() if p>0.01}}
 
-import requests, base64, json
-
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
-GITHUB_REPO  = st.secrets["GITHUB_REPO"]
-ARCHIVO_CSV  = "fallas_ingresadas.csv"
-
-def cargar_hist():
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    r = requests.get(url, headers=headers)
-    if r.status_code == 200:
-        contenido = base64.b64decode(r.json()["content"]).decode("utf-8")
-        from io import StringIO
-        return pd.read_csv(StringIO(contenido))
-    return pd.DataFrame()
-
-def guardar(fila):
-    dh = cargar_hist()
-    n  = len(dh) + 1
-    fila["N°"] = n
-    fila["Fecha_hora"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    dh = pd.concat([dh, pd.DataFrame([fila])], ignore_index=True)
-
-    csv_str  = dh.to_csv(index=False)
-    contenido_b64 = base64.b64encode(csv_str.encode()).decode()
-
-    url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-
-    # Obtener SHA del archivo si ya existe
-    r = requests.get(url, headers=headers)
-    sha = r.json().get("sha", None) if r.status_code == 200 else None
-
-    payload = {
-        "message": f"Registro N°{n} — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        "content": contenido_b64,
-    }
-    if sha:
-        payload["sha"] = sha
-
-    requests.put(url, headers=headers, data=json.dumps(payload))
-    return n
-
-# ─── Página 1: Registrar Falla ────────────────────────────
+# ══════════════════════════════════════════════════════════
+# PÁGINA 1 — REGISTRAR FALLA
+# ══════════════════════════════════════════════════════════
 if pagina=="📝 Registrar Falla":
     st.markdown("## 📝 Registro de Interrupción")
     st.markdown('<div class="sec">👤 Sección 1 — Operador</div>',unsafe_allow_html=True)
@@ -336,9 +330,9 @@ if pagina=="📝 Registrar Falla":
           <p style="margin:8px 0 0;font-size:13px"><b>Descripción:</b> {u["desc"]}</p>
         </div>""",unsafe_allow_html=True)
         p1,p2,p3=st.columns(3)
-        p1.metric("🔴 FM",f"{rf['FM']}%"); p1.progress(rf["FM"]/100)
-        p2.metric("🟡 Externa",f"{rf['E']}%"); p2.progress(rf["E"]/100)
-        p3.metric("🟢 Interna",f"{rf['I']}%"); p3.progress(rf["I"]/100)
+        p1.metric("🔴 FM",f"{rf[chr(70)+chr(77)]}%"); p1.progress(rf["FM"]/100)
+        p2.metric("🟡 Externa",f"{rf[chr(69)]}%"); p2.progress(rf["E"]/100)
+        p3.metric("🟢 Interna",f"{rf[chr(73)]}%"); p3.progress(rf["I"]/100)
         if rg:
             nivel="🟢 Alta" if rg["conf"]>=80 else "🟡 Media" if rg["conf"]>=50 else "🔴 Baja"
             votos=" | ".join(f"Alim.{a}:{p}%" for a,p in sorted(rg["votos"].items(),key=lambda x:-x[1]))
@@ -356,7 +350,7 @@ if pagina=="📝 Registrar Falla":
                         folium.CircleMarker(c["pts"][i],radius=3,color=col,
                             fill=True,fill_opacity=0.35,weight=0).add_to(m)
                     folium.Marker([c["lat"],c["lon"]],tooltip=f"Alimentador {alim}",
-                        popup=folium.Popup(f"<b>{'⚡ ' if es else ''}Alim.{alim}</b><br>Comunas:{c['comunas']}",max_width=180),
+                        popup=folium.Popup(f"<b>Alim.{alim}</b><br>Comunas:{c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}",max_width=180),
                         icon=folium.Icon(color="red" if es else col,
                             icon="bolt" if es else "info-sign",
                             prefix="fa" if es else "glyphicon")).add_to(m)
@@ -373,26 +367,32 @@ if pagina=="📝 Registrar Falla":
             st.info("📍 Sin coordenadas — no se identificó alimentador.")
         st.markdown("---")
         if st.button("💾 Guardar registro",type="primary"):
-            n=guardar({"Usuario":u["usuario"],"Cuadrilla":u["cuadrilla"],
-                "Descripcion":u["desc"],"Categoria":u["cat"],"Subcausa":u["sub"],
-                "Modo":"Guiado" if "Guiado" in u["modo"] else "Manual",
-                "Clasificacion":rf["pred"],
-                "Tipo_Falla":ETIQUETAS[rf["pred"]].split(" ",1)[1],
-                "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
-                "X_UTM":x_coord or "","Y_UTM":y_coord or "",
-                "Alimentador":rg["alim"] if rg else "",
-                "Confianza_Alim_%":rg["conf"] if rg else "",
-                "Dist_punto_m":rg["dist_p"] if rg else "",
-                "Comunas":rg["comunas"] if rg else ""})
-            st.success(f"✅ Registro N°{n} guardado correctamente")
+            with st.spinner("Guardando en GitHub..."):
+                n=guardar({
+                    "Usuario":u["usuario"],"Cuadrilla":u["cuadrilla"],
+                    "Descripcion":u["desc"],"Categoria":u["cat"],"Subcausa":u["sub"],
+                    "Modo":"Guiado" if "Guiado" in u["modo"] else "Manual",
+                    "Clasificacion":rf["pred"],
+                    "Tipo_Falla":ETIQUETAS[rf["pred"]].split(" ",1)[1],
+                    "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
+                    "X_UTM":x_coord or "","Y_UTM":y_coord or "",
+                    "Alimentador":rg["alim"] if rg else "",
+                    "Confianza_Alim_%":rg["conf"] if rg else "",
+                    "Dist_punto_m":rg["dist_p"] if rg else "",
+                    "Comunas":rg["comunas"] if rg else ""})
+            st.success(f"✅ Registro N°{n} guardado en GitHub → {ARCHIVO_CSV}")
             st.session_state["mostrar"]=False
             st.session_state["ultimo"]={}
 
-# ─── Página 2: Historial ──────────────────────────────────
+# ══════════════════════════════════════════════════════════
+# PÁGINA 2 — HISTORIAL
+# ══════════════════════════════════════════════════════════
 elif pagina=="📋 Historial":
     st.markdown("## 📋 Historial de Fallas")
-    dh=cargar_hist()
-    if dh.empty: st.info("📭 Sin registros aún.")
+    with st.spinner("Cargando historial desde GitHub..."):
+        dh=cargar_hist()
+    if dh.empty:
+        st.info("📭 Sin registros aún.")
     else:
         c1,c2,c3,c4=st.columns(4); c1.metric("Total",len(dh))
         if "Clasificacion" in dh.columns:
@@ -412,17 +412,27 @@ elif pagina=="📋 Historial":
                 fu=st.selectbox("Filtrar usuario:",us)
                 if fu!="Todos": dh=dh[dh["Usuario"]==fu]
         st.dataframe(dh,use_container_width=True,height=400)
-        csv=dh.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Descargar CSV",csv,"historial_fallas.csv","text/csv")
+        col_d1,col_d2=st.columns(2)
+        with col_d1:
+            csv=dh.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Descargar CSV",csv,"historial_fallas.csv","text/csv")
+        with col_d2:
+            excel_buf=__import__("io").BytesIO()
+            dh.to_excel(excel_buf,index=False); excel_buf.seek(0)
+            st.download_button("⬇️ Descargar Excel",excel_buf,
+                "historial_fallas.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-# ─── Página 3: Mapa General ───────────────────────────────
+# ══════════════════════════════════════════════════════════
+# PÁGINA 3 — MAPA GENERAL
+# ══════════════════════════════════════════════════════════
 elif pagina=="🗺 Mapa General":
     st.markdown("## 🗺 Mapa de Alimentadores CEC")
     ma,mb=st.columns([3,1])
     with mb:
         st.markdown("**Alimentadores:**")
         for alim,c in sorted(info_alim.items()):
-            st.markdown(f"● **Alim.{alim}** — {c['comunas']}")
+            st.markdown(f"● **Alim.{alim}** — {c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}")
     with ma:
         m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
         for alim,c in sorted(info_alim.items()):
@@ -432,11 +442,17 @@ elif pagina=="🗺 Mapa General":
                 folium.CircleMarker(c["pts"][i],radius=3,color=col,
                     fill=True,fill_opacity=0.35,weight=0).add_to(m)
             folium.Marker([c["lat"],c["lon"]],tooltip=f"Alimentador {alim}",
-                popup=folium.Popup(f"<b>Alim.{alim}</b><br>Comunas:{c['comunas']}<br>Fallas:{c['n_fallas']}",max_width=180),
+                popup=folium.Popup(
+                    f"<b>Alim.{alim}</b><br>"
+                    f"Comunas:{c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}<br>"
+                    f"Fallas:{c[chr(110)+chr(95)+chr(102)+chr(97)+chr(108)+chr(108)+chr(97)+chr(115)]}",
+                    max_width=180),
                 icon=folium.Icon(color=col,icon="info-sign",prefix="glyphicon")).add_to(m)
         st_folium(m,width=700,height=500)
 
-# ─── Página 4: Ayuda ──────────────────────────────────────
+# ══════════════════════════════════════════════════════════
+# PÁGINA 4 — AYUDA
+# ══════════════════════════════════════════════════════════
 elif pagina=="ℹ️ Ayuda":
     st.markdown("## ℹ️ Guía de uso")
     with st.expander("📝 ¿Cómo registrar una falla?",expanded=True):
@@ -444,7 +460,7 @@ elif pagina=="ℹ️ Ayuda":
         1. Ve a **📝 Registrar Falla**
         2. Ingresa tu **nombre** y selecciona tu **cuadrilla**
         3. Elige **Guiado** (categoría + subcausa) o **Manual** (texto libre)
-        4. Si tienes coordenadas X e Y del Excel, ingrésalas
+        4. Si tienes coordenadas X e Y, ingrésalas (acepta punto y coma)
         5. Presiona **🔍 Clasificar falla**
         6. Revisa el resultado y presiona **💾 Guardar registro**
         """)
@@ -464,4 +480,7 @@ elif pagina=="ℹ️ Ayuda":
         - 🟢 Alta (>80%) / 🟡 Media (50-80%) / 🔴 Baja (<50%)
         """)
     with st.expander("💾 ¿Dónde se guardan los datos?"):
-        st.markdown("Los registros se guardan en **fallas_ingresadas.xlsx**. Descárgalos desde **📋 Historial**.")
+        st.markdown("""
+        Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
+        Puedes descargarlo como **CSV o Excel** desde la página **📋 Historial**.
+        """)
