@@ -389,15 +389,27 @@ if pagina=="📝 Registrar Falla":
 # ══════════════════════════════════════════════════════════
 elif pagina=="📋 Historial":
     st.markdown("## 📋 Historial de Fallas")
-    # DEBUG temporal
+    # DEBUG completo
+    st.write("Repo:", GITHUB_REPO)
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    r = requests.get(url, headers=headers)
-    st.write("Status GitHub:", r.status_code)
-    if r.status_code == 200:
-        st.write("Archivo encontrado, tamaño:", r.json().get("size"), "bytes")
+    
+    # Probar si el REPO existe
+    r_repo = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}", headers=headers)
+    st.write("¿Repo existe? Status:", r_repo.status_code)
+    
+    # Probar si el archivo existe
+    r_file = requests.get(url, headers=headers)
+    st.write("¿Archivo CSV existe? Status:", r_file.status_code)
+    
+    # Ver qué hay en el repo
+    r_contenido = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/contents/", headers=headers)
+    st.write("Archivos en el repo:")
+    if r_contenido.status_code == 200:
+        for archivo in r_contenido.json():
+            st.write("  →", archivo["name"])
     else:
-        st.write("Error:", r.json())
+        st.write("Error viendo contenido:", r_contenido.json())
     with st.spinner("Cargando historial desde GitHub..."):
         dh=cargar_hist()
     if dh.empty:
