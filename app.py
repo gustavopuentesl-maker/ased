@@ -167,8 +167,8 @@ with st.sidebar:
         if os.path.exists("logo_udec.png"):
             st.image("logo_udec.png",width=100)
     with col_l2:
-        if os.path.exists("logo_cec.png"):
-            st.image("logo_cec.png",width=100)
+        if os.path.exists("logo_cec.jpg"):
+            st.image("logo_cec.jpg",width=100)
     st.markdown("---")
     st.markdown("# ⚡ CEC Fallas")
     st.markdown("🌐 [Sitio web CEC](https://cecltda.cl/)")
@@ -189,7 +189,7 @@ with st.sidebar:
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Gustavo Puentes Lermanda</a><br><br>
-        <a href='https://www.linkedin.com/in/PERFIL-SOFIA'
+        <a href='https://www.linkedin.com/in/sofia-eliana-nahuelpán-álvarez-62b11a351'
            target='_blank' style='color:#0077b5;text-decoration:none'>
            👤 Sofía Nahuelpán Álvarez</a><br><br>
         <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN'
