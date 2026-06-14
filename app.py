@@ -476,11 +476,8 @@ elif pagina=="ℹ️ Ayuda":
         st.markdown("""
         - Usa las coordenadas **X e Y** del Excel (UTM zona 19S)
         - Acepta tanto punto (315569.5) como coma (315569,5)
-        - El modelo KNN identifica el alimentador con ~90% de precisión
-        - 🟢 Alta (>80%) / 🟡 Media (50-80%) / 🔴 Baja (<50%)
         """)
     with st.expander("💾 ¿Dónde se guardan los datos?"):
         st.markdown("""
-        Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
         Puedes descargarlo como **CSV o Excel** desde la página **📋 Historial**.
         """)
