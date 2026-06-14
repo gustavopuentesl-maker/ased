@@ -542,7 +542,7 @@ elif pagina=="🗺 Mapa General":
 # PÁGINA 5 — ESTADÍSTICAS HISTÓRICAS
 # ══════════════════════════════════════════════════════════
 elif pagina=="📊 Datos Históricos":
-    st.markdown("## 📊 Estadísticas Históricas de Fallas")
+    st.markdown("## 📊 Estadísticas Históricas de Fallas (2018–2025)")
     try:
         import plotly.express as px
     except:
@@ -550,18 +550,20 @@ elif pagina=="📊 Datos Históricos":
 
     xl2 = pd.read_excel(EXCEL_PATH, sheet_name=None)
 
-    # Tasas anuales
-    st.markdown('<div class="sec">📈 Tasa de Falla Promedio Anual</div>',unsafe_allow_html=True)
+    # ── Tasas de falla promedio anual (filas 2-6, solo 2018-2022) ──────────
+    st.markdown('<div class="sec">📈 Tasa de Falla Promedio Anual (2018–2022)</div>',unsafe_allow_html=True)
     td = xl2["TD"].iloc[2:7].copy()
     td.columns = ["_","_2","Año","E","FM","I","_3","_4","_5","_6"]
     td = td[["Año","E","FM","I"]].dropna()
-    td["Año"]=td["Año"].astype(int)
+    td["Año"] = pd.to_numeric(td["Año"],errors="coerce").astype(int)
     for c in ["E","FM","I"]: td[c]=pd.to_numeric(td[c],errors="coerce")
     td_m = td.melt(id_vars="Año",value_vars=["E","FM","I"],var_name="Tipo",value_name="Tasa")
     fig1=px.bar(td_m,x="Año",y="Tasa",color="Tipo",barmode="group",
                 color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
-                title="Tasa de falla promedio anual por tipo")
-    fig1.update_layout(plot_bgcolor="white",paper_bgcolor="white")
+                title="Tasa de falla promedio anual 2018–2022",
+                labels={"Tasa":"Tasa de falla","Tipo":"Tipo de falla"})
+    fig1.update_layout(plot_bgcolor="white",paper_bgcolor="white",
+                       xaxis=dict(tickmode="linear"))
     st.plotly_chart(fig1,use_container_width=True)
 
     col1,col2=st.columns(2)
@@ -572,43 +574,91 @@ elif pagina=="📊 Datos Históricos":
         fig_pie=px.pie(values=[td["FM"].mean(),td["E"].mean(),td["I"].mean()],
                        names=["Fuerza Mayor","Externa","Interna"],
                        color_discrete_sequence=["#e74c3c","#f39c12","#27ae60"],
-                       title="Proporción promedio histórica")
+                       title="Proporción promedio 2018–2022")
         st.plotly_chart(fig_pie,use_container_width=True)
 
     st.markdown("---")
 
-    # Fallas por alimentador
-    st.markdown('<div class="sec">⚡ Cantidad y Horas de Falla por Alimentador</div>',unsafe_allow_html=True)
-    fs=xl2["Fallas del sistema"].iloc[2:8].copy()
-    fs.columns=["_","Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM","_2","_3"]
-    fs=fs[["Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]].dropna()
-    fs["Alimentador"]=pd.to_numeric(fs["Alimentador"],errors="coerce").dropna().astype(int).astype(str)
-    for c in ["Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]:
-        fs[c]=pd.to_numeric(fs[c],errors="coerce")
+    # ── Tabla completa 2018-2025 con fallas y horas ────────────────────────
+    st.markdown('<div class="sec">📋 Fallas y Horas Promedio por Año (2018–2025)</div>',unsafe_allow_html=True)
+    td2 = xl2["TD"].iloc[10:19].copy()
+    td2.columns = ["_","Año","Fallas_E","Horas_E","Fallas_FM","Horas_FM","Fallas_I","Horas_I","Total_Fallas","Total_Horas"]
+    td2 = td2[["Año","Fallas_E","Horas_E","Fallas_FM","Horas_FM","Fallas_I","Horas_I","Total_Fallas","Total_Horas"]].dropna(subset=["Año"])
+    td2["Año"] = pd.to_numeric(td2["Año"],errors="coerce")
+    td2 = td2[td2["Año"].notna() & (td2["Año"]>2000)]
+    td2["Año"] = td2["Año"].astype(int)
+    for c in td2.columns[1:]: td2[c]=pd.to_numeric(td2[c],errors="coerce")
 
     col3,col4=st.columns(2)
     with col3:
-        fs_c=fs.melt(id_vars="Alimentador",value_vars=["Externas","Internas","FM"],
-                     var_name="Tipo",value_name="Cantidad")
-        fig2=px.bar(fs_c,x="Alimentador",y="Cantidad",color="Tipo",barmode="stack",
-                    color_discrete_map={"FM":"#e74c3c","Externas":"#f39c12","Internas":"#27ae60"},
-                    title="Cantidad de fallas por alimentador")
-        fig2.update_layout(plot_bgcolor="white")
+        cant_m=td2.melt(id_vars="Año",value_vars=["Fallas_E","Fallas_FM","Fallas_I"],
+                        var_name="Tipo",value_name="Cantidad")
+        cant_m["Tipo"]=cant_m["Tipo"].map({"Fallas_E":"Externa","Fallas_FM":"FM","Fallas_I":"Interna"})
+        fig2=px.bar(cant_m,x="Año",y="Cantidad",color="Tipo",barmode="stack",
+                    color_discrete_map={"FM":"#e74c3c","Externa":"#f39c12","Interna":"#27ae60"},
+                    title="Cantidad de fallas por año y tipo (2018–2025)")
+        fig2.update_layout(plot_bgcolor="white",xaxis=dict(tickmode="linear"))
         st.plotly_chart(fig2,use_container_width=True)
     with col4:
-        fs_h=fs.melt(id_vars="Alimentador",value_vars=["Horas_E","Horas_I","Horas_FM"],
-                     var_name="Tipo",value_name="Horas")
-        fs_h["Tipo"]=fs_h["Tipo"].map({"Horas_E":"Externa","Horas_I":"Interna","Horas_FM":"FM"})
-        fig3=px.bar(fs_h,x="Alimentador",y="Horas",color="Tipo",barmode="stack",
+        hrs_m=td2.melt(id_vars="Año",value_vars=["Horas_E","Horas_FM","Horas_I"],
+                       var_name="Tipo",value_name="Horas")
+        hrs_m["Tipo"]=hrs_m["Tipo"].map({"Horas_E":"Externa","Horas_FM":"FM","Horas_I":"Interna"})
+        fig3=px.bar(hrs_m,x="Año",y="Horas",color="Tipo",barmode="stack",
                     color_discrete_map={"FM":"#e74c3c","Externa":"#f39c12","Interna":"#27ae60"},
-                    title="Horas con falla por alimentador")
-        fig3.update_layout(plot_bgcolor="white")
+                    title="Promedio de horas con falla por año (2018–2025)")
+        fig3.update_layout(plot_bgcolor="white",xaxis=dict(tickmode="linear"))
         st.plotly_chart(fig3,use_container_width=True)
+
+    # Tabla resumen
+    st.dataframe(td2.rename(columns={
+        "Fallas_E":"Fallas E","Horas_E":"Hrs E",
+        "Fallas_FM":"Fallas FM","Horas_FM":"Hrs FM",
+        "Fallas_I":"Fallas I","Horas_I":"Hrs I",
+        "Total_Fallas":"Total Fallas","Total_Horas":"Total Hrs prom"
+    }),use_container_width=True,hide_index=True)
 
     st.markdown("---")
 
-    # Evolución mensual
-    st.markdown('<div class="sec">📅 Evolución Mensual de Fallas</div>',unsafe_allow_html=True)
+    # ── Fallas por alimentador (todos los alimentadores) ───────────────────
+    st.markdown('<div class="sec">⚡ Cantidad y Horas de Falla por Alimentador</div>',unsafe_allow_html=True)
+    fs=xl2["Fallas del sistema"].iloc[2:10].copy()
+    fs.columns=["_","Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM","_2","_3"]
+    fs=fs[["Alimentador","Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]].copy()
+    fs["Alimentador"]=pd.to_numeric(fs["Alimentador"],errors="coerce")
+    fs=fs.dropna(subset=["Alimentador"])
+    fs["Alimentador"]=fs["Alimentador"].astype(int).astype(str)
+    for c in ["Externas","Internas","FM","Horas_E","Horas_I","Horas_FM"]:
+        fs[c]=pd.to_numeric(fs[c],errors="coerce")
+
+    # Nombres de alimentadores
+    nombres_alim = {"2":"Alim.2 Morza","6":"Alim.6 Zapallar","7":"Alim.7 Los Niches",
+                    "8":"Alim.8 Industrial","9":"Alim.9 Los Queñes",
+                    "10":"Alim.10 La Laguna","11":"Alim.11 La Obra"}
+    fs["Nombre"]=fs["Alimentador"].map(nombres_alim).fillna(fs["Alimentador"])
+
+    col5,col6=st.columns(2)
+    with col5:
+        fs_c=fs.melt(id_vars="Nombre",value_vars=["Externas","Internas","FM"],
+                     var_name="Tipo",value_name="Cantidad")
+        fig4=px.bar(fs_c,x="Nombre",y="Cantidad",color="Tipo",barmode="stack",
+                    color_discrete_map={"FM":"#e74c3c","Externas":"#f39c12","Internas":"#27ae60"},
+                    title="Total fallas por alimentador")
+        fig4.update_layout(plot_bgcolor="white",xaxis_tickangle=-20)
+        st.plotly_chart(fig4,use_container_width=True)
+    with col6:
+        fs_h=fs.melt(id_vars="Nombre",value_vars=["Horas_E","Horas_I","Horas_FM"],
+                     var_name="Tipo",value_name="Horas")
+        fs_h["Tipo"]=fs_h["Tipo"].map({"Horas_E":"Externa","Horas_I":"Interna","Horas_FM":"FM"})
+        fig5=px.bar(fs_h,x="Nombre",y="Horas",color="Tipo",barmode="stack",
+                    color_discrete_map={"FM":"#e74c3c","Externa":"#f39c12","Interna":"#27ae60"},
+                    title="Total horas con falla por alimentador")
+        fig5.update_layout(plot_bgcolor="white",xaxis_tickangle=-20)
+        st.plotly_chart(fig5,use_container_width=True)
+
+    st.markdown("---")
+
+    # ── Evolución mensual BD completa ──────────────────────────────────────
+    st.markdown('<div class="sec">📅 Evolución Mensual de Fallas (BD 2018–2025)</div>',unsafe_allow_html=True)
     raw2=xl2["BD"].iloc[1:].copy()
     raw2.columns=["_","INC","Alimentador","Trafos","KVA","Clientes","Inicio","Fin",
                   "Duracion","Causa","Calificacion","Comuna_id","Comuna","Tension",
@@ -617,14 +667,24 @@ elif pagina=="📊 Datos Históricos":
     raw2["Inicio"]=pd.to_datetime(raw2["Inicio"],errors="coerce")
     raw2=raw2.dropna(subset=["Inicio","Calificacion"])
     raw2=raw2[raw2["Calificacion"].isin(["I","FM","E"])]
+    raw2["Año"]=raw2["Inicio"].dt.year
     raw2["Mes"]=raw2["Inicio"].dt.to_period("M").astype(str)
+
+    anual=raw2.groupby(["Año","Calificacion"]).size().reset_index(name="Cantidad")
+    fig6=px.bar(anual,x="Año",y="Cantidad",color="Calificacion",barmode="stack",
+                color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
+                title="Fallas anuales por tipo 2018–2025",
+                labels={"Calificacion":"Tipo","Año":"Año"})
+    fig6.update_layout(plot_bgcolor="white",xaxis=dict(tickmode="linear"))
+    st.plotly_chart(fig6,use_container_width=True)
+
     mensual=raw2.groupby(["Mes","Calificacion"]).size().reset_index(name="Cantidad")
-    fig4=px.line(mensual,x="Mes",y="Cantidad",color="Calificacion",
+    fig7=px.line(mensual,x="Mes",y="Cantidad",color="Calificacion",
                  color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
-                 title="Evolución mensual histórica",
+                 title="Evolución mensual 2018–2025",
                  labels={"Calificacion":"Tipo"})
-    fig4.update_layout(plot_bgcolor="white",xaxis_tickangle=-45)
-    st.plotly_chart(fig4,use_container_width=True)
+    fig7.update_layout(plot_bgcolor="white",xaxis_tickangle=-45)
+    st.plotly_chart(fig7,use_container_width=True)
 
 # ══════════════════════════════════════════════════════════
 # PÁGINA 6 — ESTADÍSTICAS ACTUALES
