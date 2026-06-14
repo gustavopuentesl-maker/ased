@@ -137,7 +137,7 @@ with st.sidebar:
         "📝 Registrar Falla","📋 Historial","🗺 Mapa General","ℹ️ Ayuda"])
     st.markdown("---")
     st.markdown("""
-    <div style='font-size:11px;color:#888;text-align:center;padding:10px 0'>
+    <div style='font-size:14px;color:#888;text-align:center;padding:10px 0'>
         <b>Desarrollado por:</b><br><br>
         <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a' target='_blank'
            style='color:#0077b5;text-decoration:none'>👤 Gustavo Puentes Lermanda</a><br><br>
