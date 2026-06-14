@@ -154,7 +154,7 @@ with st.sidebar:
         if os.path.exists("logo_udec.png"):
             st.image("logo_udec.png",width=100)
     with col_l2:
-        if os.path.exists("logo_cec.png"):
+        if os.path.exists("logo_cec.jpg"):
             st.image("logo_cec.png",width=100)
     st.markdown("---")
     st.markdown("# ⚡ CEC Fallas")
