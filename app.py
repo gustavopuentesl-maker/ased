@@ -1,9 +1,3 @@
-"""
-============================================================
-CLASIFICADOR CEC — Aplicación Web Streamlit
-Archivo: app.py
-============================================================
-"""
 import streamlit as st
 import os, re, warnings
 import numpy as np
@@ -19,9 +13,8 @@ from sklearn.pipeline import Pipeline
 
 warnings.filterwarnings("ignore")
 
-# ─── Configuración de página ──────────────────────────────
-st.set_page_config(page_title="Clasificador Fallas CEC",page_icon="⚡",
-                   layout="wide",initial_sidebar_state="expanded")
+# ─── Configuración ────────────────────────────────────────
+st.set_page_config(page_title="Clasificador Fallas CEC",page_icon="⚡",layout="wide")
 st.markdown("""<style>
 .resultado-FM{border-left:5px solid #e74c3c;background:#fdf0ef;border-radius:8px;padding:14px;margin:10px 0}
 .resultado-E{border-left:5px solid #f39c12;background:#fef9ef;border-radius:8px;padding:14px;margin:10px 0}
@@ -33,11 +26,14 @@ st.markdown("""<style>
 .sec{font-size:16px;font-weight:bold;color:#2c3e50;border-bottom:2px solid #3498db;padding-bottom:4px;margin-bottom:10px}
 </style>""",unsafe_allow_html=True)
 
-# ─── Constantes ────────────────────────────────────────────
+# ─── Rutas de archivos ────────────────────────────────────
+EXCEL_PATH  = "Estadisticas_de_Interrupciones.xlsx"
+ARCHIVO_OUT = "fallas_ingresadas.xlsx"
+
+# ─── Constantes ───────────────────────────────────────────
 ETIQUETAS={"FM":"🔴 Fuerza Mayor","E":"🟡 Externa","I":"🟢 Interna"}
 COLORES={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"}
 COLORES_ALIM={2:"blue",6:"red",7:"green",8:"purple",9:"orange",10:"darkblue"}
-ARCHIVO="fallas_ingresadas.xlsx"
 
 CUADRILLAS=["Cuadrilla 1 — Curicó Norte","Cuadrilla 2 — Curicó Sur",
             "Cuadrilla 3 — Teno","Cuadrilla 4 — Molina",
@@ -119,26 +115,43 @@ CAUSAS={
         ("Otro cliente","Instalación cliente — no especificada")]},
 }
 
-# ─── Sidebar ───────────────────────────────────────────────
+# ─── Sidebar ──────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("# ⚡ CEC Fallas")
+    col_l1,col_l2=st.columns(2)
+    with col_l1:
+        if os.path.exists("logo_udec.png"):
+            st.image("logo_udec.png",width=100)
+    with col_l2:
+        if os.path.exists("logo_cec.png"):
+            st.image("logo_cec.png",width=100)
     st.markdown("---")
-    st.markdown("### 📁 Archivo de datos")
-    ruta_default=os.path.join(os.path.expanduser("~"),
-                              "Estadisticas de Interrupciones.xlsx")
-    excel_path=st.text_input("Ruta del Excel:",value=ruta_default)
-    if not os.path.exists(excel_path):
-        st.error("❌ Archivo no encontrado"); st.stop()
+    st.markdown("# ⚡ CEC Fallas")
+    st.markdown("🌐 [Sitio web CEC](https://cecltda.cl/)")
+    st.markdown("---")
+    if not os.path.exists(EXCEL_PATH):
+        st.error("❌ Excel no encontrado"); st.stop()
     else:
-        st.success("✅ Excel encontrado")
+        st.success("✅ Sistema conectado")
     st.markdown("---")
     pagina=st.radio("Navegación:",[
         "📝 Registrar Falla","📋 Historial","🗺 Mapa General","ℹ️ Ayuda"])
     st.markdown("---")
-    st.caption("Clasificador CEC v3 | Streamlit")
+    st.markdown("""
+    <div style='font-size:11px;color:#888;text-align:center;padding:10px 0'>
+        <b>Desarrollado por:</b><br><br>
+        <a href='https://www.linkedin.com/in/gustavo-puentes-lermanda-78830a25a' target='_blank'
+           style='color:#0077b5;text-decoration:none'>👤 Gustavo Puentes Lermanda</a><br><br>
+        <a href='https://www.linkedin.com/in/PERFIL-SOFIA' target='_blank'
+           style='color:#0077b5;text-decoration:none'>👤 Sofía Nahuelpán Álvarez</a><br><br>
+        <a href='https://www.linkedin.com/in/PERFIL-SEBASTIAN' target='_blank'
+           style='color:#0077b5;text-decoration:none'>👤 Sebastián Castro Astudillo</a><br><br>
+        <i>Depto. Ingeniería Eléctrica<br>Universidad de Concepción</i>
+    </div>
+    """,unsafe_allow_html=True)
+    st.caption("Clasificador CEC v3 © 2026")
 
-# ─── Cargar modelos (cacheado) ─────────────────────────────
-@st.cache_resource(show_spinner="⏳ Entrenando modelos...")
+# ─── Cargar modelos ───────────────────────────────────────
+@st.cache_resource(show_spinner="⏳ Cargando datos y entrenando modelos...")
 def cargar_modelos(path):
     def tf(v):
         try: return float(str(v).replace(",","."))
@@ -179,17 +192,16 @@ def cargar_modelos(path):
         return " ".join(x for x in t.split() if x not in STOP and len(x)>2)
     dm=df.dropna(subset=["Descripcion","Calificacion"]).copy()
     dm["txt"]=dm["Descripcion"].apply(limpiar)
-    modelo=Pipeline([("tfidf",TfidfVectorizer(ngram_range=(1,2),max_features=5000,min_df=2)),
-                     ("clf",LogisticRegression(max_iter=1000,class_weight="balanced",random_state=42))])
+    modelo=Pipeline([
+        ("tfidf",TfidfVectorizer(ngram_range=(1,2),max_features=5000,min_df=2)),
+        ("clf",LogisticRegression(max_iter=1000,class_weight="balanced",random_state=42))])
     modelo.fit(dm["txt"],dm["Calificacion"])
-    return modelo,knn,info,limpiar
+    return modelo,knn,info,limpiar,u2w
 
-modelo,knn_alim,info_alim,limpiar=cargar_modelos(excel_path)
-u2w=Transformer.from_crs("EPSG:32719","EPSG:4326",always_xy=True)
-w2u=Transformer.from_crs("EPSG:4326","EPSG:32719",always_xy=True)
+modelo,knn_alim,info_alim,limpiar,u2w=cargar_modelos(EXCEL_PATH)
 def u2l(x,y): lo,la=u2w.transform(x,y); return la,lo
 
-# ─── Funciones core ────────────────────────────────────────
+# ─── Funciones core ───────────────────────────────────────
 def predecir(desc):
     tl=limpiar(desc); pm=modelo.predict([tl])[0]
     pr=dict(zip(modelo.classes_,modelo.predict_proba([tl])[0]))
@@ -208,62 +220,33 @@ def id_alim(x,y):
             "dist_c":round(dc,1),"comunas":c["comunas"],
             "votos":{int(a):round(p*100,1) for a,p in proba.items() if p>0.01}}
 
-def mapa(rg=None,x=None,y=None):
-    m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
-    for alim,c in sorted(info_alim.items()):
-        col=COLORES_ALIM.get(alim,"gray"); es=rg and rg["alim"]==alim
-        paso=max(1,len(c["pts"])//60)
-        for i in range(0,len(c["pts"]),paso):
-            folium.CircleMarker(c["pts"][i],radius=3,color=col,fill=True,
-                fill_opacity=0.35,weight=0,tooltip=f"Alim.{alim}").add_to(m)
-        folium.Marker([c["lat"],c["lon"]],tooltip=f"Alimentador {alim}",
-            popup=folium.Popup(f"<b>{'⚡ ' if es else ''}Alim.{alim}</b><br>"
-                               f"Comunas: {c['comunas']}<br>Fallas:{c['n_fallas']}",max_width=180),
-            icon=folium.Icon(color="red" if es else col,
-                icon="bolt" if es else "info-sign",
-                prefix="fa" if es else "glyphicon")).add_to(m)
-    if x and y:
-        lp,lop=u2l(x,y)
-        folium.Marker([lp,lop],tooltip="📍 Punto",
-            icon=folium.Icon(color="black",icon="map-marker",prefix="fa")).add_to(m)
-        if rg:
-            a=rg["alim"]
-            folium.PolyLine([[lp,lop],[info_alim[a]["lat"],info_alim[a]["lon"]]],
-                color="black",weight=2,dash_array="6").add_to(m)
-    return m
-
 def cargar_hist():
-    if os.path.exists(ARCHIVO): return pd.read_excel(ARCHIVO)
+    if os.path.exists(ARCHIVO_OUT): return pd.read_excel(ARCHIVO_OUT)
     return pd.DataFrame()
 
 def guardar(fila):
     dh=cargar_hist(); n=len(dh)+1
     fila["N°"]=n; fila["Fecha_hora"]=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dh=pd.concat([dh,pd.DataFrame([fila])],ignore_index=True)
-    dh.to_excel(ARCHIVO,index=False); return n
+    dh.to_excel(ARCHIVO_OUT,index=False); return n
 
-# ══════════════════════════════════════════════════════════
-# PÁGINA 1 — REGISTRAR FALLA
-# ══════════════════════════════════════════════════════════
+# ─── Página 1: Registrar Falla ────────────────────────────
 if pagina=="📝 Registrar Falla":
     st.markdown("## 📝 Registro de Interrupción")
-
-    # Sección 1: Operador
     st.markdown('<div class="sec">👤 Sección 1 — Operador</div>',unsafe_allow_html=True)
     c1,c2,c3=st.columns(3)
     with c1: usuario=st.text_input("Nombre del operador *",placeholder="Ej: Juan Pérez")
     with c2: cuad_sel=st.selectbox("Cuadrilla *",CUADRILLAS)
     with c3:
-        cuadrilla=st.text_input("Nombre de cuadrilla:") if "Otra" in cuad_sel else cuad_sel
-        if "Otra" not in cuad_sel: st.text_input("Cuadrilla:",value=cuadrilla,disabled=True)
-
+        if "Otra" in cuad_sel:
+            cuadrilla=st.text_input("Nombre de cuadrilla:")
+        else:
+            cuadrilla=cuad_sel
+            st.text_input("Cuadrilla:",value=cuadrilla,disabled=True)
     st.markdown("---")
-
-    # Sección 2: Descripción
     st.markdown('<div class="sec">📝 Sección 2 — Descripción de la falla</div>',unsafe_allow_html=True)
     modo=st.radio("Modo:",["🧭 Guiado (recomendado)","✏️ Manual"],horizontal=True)
     desc=""; cat=""; sub=""; cal_sug=None
-
     if "Guiado" in modo:
         ca,cb=st.columns(2)
         with ca: categoria=st.selectbox("Categoría:",list(CAUSAS.keys()))
@@ -274,26 +257,27 @@ if pagina=="📝 Registrar Falla":
         det=st.text_area("Detalles adicionales:",placeholder="Sector, equipo, observaciones...",height=70)
         desc=base+(f". {det}" if det.strip() else "")
         cat=categoria; sub=subcausa; cal_sug=CAUSAS[categoria]["cal"]
-        st.info(f"📋 **Descripción generada:** {desc}")
+        st.info(f"📋 Descripción generada: {desc}")
     else:
-        desc=st.text_area("Descripción:",placeholder="Ej: Se abre reconectador RCU5724 por caída de árbol...",height=100)
+        desc=st.text_area("Descripción:",placeholder="Ej: Se abre reconectador RCU5724...",height=100)
         cat="Manual"; sub="Manual"
-
     st.markdown("---")
-
-    # Sección 3: Coordenadas
     st.markdown('<div class="sec">📍 Sección 3 — Coordenadas UTM zona 19S (opcional)</div>',unsafe_allow_html=True)
     cx,cy,ci=st.columns([2,2,3])
-    with cx: xv=st.number_input("X — Este:",min_value=0.0,value=0.0,step=1.0,format="%.1f")
-    with cy: yv=st.number_input("Y — Norte:",min_value=0.0,value=0.0,step=1.0,format="%.1f")
+    with cx:
+        xv_str=st.text_input("X — Este:",placeholder="Ej: 315569.5",key="coord_x")
+        try: xv=float(xv_str.replace(",",".")) if xv_str.strip() else 0.0
+        except: xv=0.0
+    with cy:
+        yv_str=st.text_input("Y — Norte:",placeholder="Ej: 6136152.3",key="coord_y")
+        try: yv=float(yv_str.replace(",",".")) if yv_str.strip() else 0.0
+        except: yv=0.0
     with ci:
         if xv>1000 and yv>1000:
-            lp,lop=u2l(xv,yv); st.success(f"📍 Lat:{lp:.5f} | Lon:{lop:.5f}")
+            lp,lop=u2l(xv,yv); st.success(f"Lat:{lp:.5f} | Lon:{lop:.5f}")
         else: st.info("Ingresa X e Y para identificar el alimentador")
-
     st.markdown("---")
-
-    if st.button("🔍 Clasificar falla",type="primary",use_container_width=False):
+    if st.button("🔍 Clasificar falla",type="primary"):
         errs=[]
         if not usuario.strip(): errs.append("⚠️ Ingresa el nombre del operador.")
         if not desc.strip(): errs.append("⚠️ Ingresa o selecciona una descripción.")
@@ -301,54 +285,77 @@ if pagina=="📝 Registrar Falla":
         if not errs:
             rf=predecir(desc)
             if cal_sug and rf["conf"]<60: rf["pred"]=cal_sug
-            rg=id_alim(xv if xv>1000 else None,yv if yv>1000 else None)
+            x_coord=float(xv) if xv>1000 else None
+            y_coord=float(yv) if yv>1000 else None
+            rg=id_alim(x_coord,y_coord)
             st.session_state["ultimo"]={"usuario":usuario,"cuadrilla":cuadrilla,
-                "desc":desc,"cat":cat,"sub":sub,"modo":modo,"rf":rf,"rg":rg,"x":xv,"y":yv}
-            st.markdown(f"""<div class="resultado-{rf['pred']}">
-              <span class="badge-{rf['pred']}">{ETIQUETAS[rf['pred']]}</span>
-              &nbsp;<span style='font-size:13px;color:#555'>
-                Confianza:<b>{rf['conf']}%</b> | Operador:<b>{usuario}</b> | Cuadrilla:<b>{cuadrilla}</b>
-              </span>
-              <p style='margin:8px 0 0;font-size:13px'><b>Descripción:</b> {desc}</p>
+                "desc":desc,"cat":cat,"sub":sub,"modo":modo,
+                "rf":rf,"rg":rg,"x":x_coord,"y":y_coord}
+            st.session_state["mostrar"]=True
+    if st.session_state.get("mostrar") and st.session_state.get("ultimo"):
+        u=st.session_state["ultimo"]; rf=u["rf"]; rg=u["rg"]
+        x_coord=u["x"]; y_coord=u["y"]
+        st.markdown(f"""<div class="resultado-{rf["pred"]}">
+          <span class="badge-{rf["pred"]}">{ETIQUETAS[rf["pred"]]}</span>
+          &nbsp;<span style="font-size:13px;color:#555">
+            Confianza:{rf["conf"]}% | Operador:{u["usuario"]} | Cuadrilla:{u["cuadrilla"]}
+          </span>
+          <p style="margin:8px 0 0;font-size:13px"><b>Descripción:</b> {u["desc"]}</p>
+        </div>""",unsafe_allow_html=True)
+        p1,p2,p3=st.columns(3)
+        p1.metric("🔴 FM",f"{rf['FM']}%"); p1.progress(rf["FM"]/100)
+        p2.metric("🟡 Externa",f"{rf['E']}%"); p2.progress(rf["E"]/100)
+        p3.metric("🟢 Interna",f"{rf['I']}%"); p3.progress(rf["I"]/100)
+        if rg:
+            nivel="🟢 Alta" if rg["conf"]>=80 else "🟡 Media" if rg["conf"]>=50 else "🔴 Baja"
+            votos=" | ".join(f"Alim.{a}:{p}%" for a,p in sorted(rg["votos"].items(),key=lambda x:-x[1]))
+            st.markdown(f"""<div class="geo-card">
+              <b>📍 Alimentador identificado: #{rg["alim"]}</b> {nivel} ({rg["conf"]}%)<br>
+              Dist.punto histórico:{rg["dist_p"]}m | Comunas:{rg["comunas"]}<br>
+              <small>Votos KNN: {votos}</small>
             </div>""",unsafe_allow_html=True)
-            p1,p2,p3=st.columns(3)
-            p1.metric("🔴 Fuerza Mayor",f"{rf['FM']}%"); p1.progress(rf["FM"]/100)
-            p2.metric("🟡 Externa",f"{rf['E']}%"); p2.progress(rf["E"]/100)
-            p3.metric("🟢 Interna",f"{rf['I']}%"); p3.progress(rf["I"]/100)
-            if rg:
-                nivel="🟢 Alta" if rg["conf"]>=80 else "🟡 Media" if rg["conf"]>=50 else "🔴 Baja"
-                votos=" | ".join(f"Alim.{a}:{p}%" for a,p in sorted(rg["votos"].items(),key=lambda x:-x[1]))
-                st.markdown(f"""<div class="geo-card">
-                  <b>📍 Alimentador identificado: #{rg['alim']}</b> {nivel} ({rg['conf']}%)<br>
-                  Dist.punto histórico:<b>{rg['dist_p']}m</b> | Comunas:{rg['comunas']}<br>
-                  <span style='font-size:11px;color:#555'>Votos KNN: {votos}</span>
-                </div>""",unsafe_allow_html=True)
-                with st.expander("🗺 Ver mapa",expanded=True):
-                    st_folium(mapa(rg,xv if xv>1000 else None,yv if yv>1000 else None),width=720,height=380)
-            else:
-                st.info("📍 Sin coordenadas — no se identificó alimentador.")
-
-    if "ultimo" in st.session_state and st.session_state["ultimo"]:
+            with st.expander("🗺 Ver mapa",expanded=True):
+                m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
+                for alim,c in sorted(info_alim.items()):
+                    col=COLORES_ALIM.get(alim,"gray"); es=rg["alim"]==alim
+                    paso=max(1,len(c["pts"])//60)
+                    for i in range(0,len(c["pts"]),paso):
+                        folium.CircleMarker(c["pts"][i],radius=3,color=col,
+                            fill=True,fill_opacity=0.35,weight=0).add_to(m)
+                    folium.Marker([c["lat"],c["lon"]],tooltip=f"Alimentador {alim}",
+                        popup=folium.Popup(f"<b>{'⚡ ' if es else ''}Alim.{alim}</b><br>Comunas:{c['comunas']}",max_width=180),
+                        icon=folium.Icon(color="red" if es else col,
+                            icon="bolt" if es else "info-sign",
+                            prefix="fa" if es else "glyphicon")).add_to(m)
+                if x_coord and y_coord:
+                    lp,lop=u2l(x_coord,y_coord)
+                    folium.Marker([lp,lop],tooltip="📍 Punto de la falla",
+                        popup=f"X:{x_coord:.0f} Y:{y_coord:.0f}",
+                        icon=folium.Icon(color="black",icon="map-marker",prefix="fa")).add_to(m)
+                    folium.PolyLine([[lp,lop],[info_alim[rg["alim"]]["lat"],info_alim[rg["alim"]]["lon"]]],
+                        color="red",weight=3,dash_array="6").add_to(m)
+                    m.location=[lp,lop]; m.zoom_start=13
+                st_folium(m,width=700,height=400)
+        else:
+            st.info("📍 Sin coordenadas — no se identificó alimentador.")
         st.markdown("---")
         if st.button("💾 Guardar registro",type="primary"):
-            u=st.session_state["ultimo"]; rf=u["rf"]; rg=u["rg"]
             n=guardar({"Usuario":u["usuario"],"Cuadrilla":u["cuadrilla"],
                 "Descripcion":u["desc"],"Categoria":u["cat"],"Subcausa":u["sub"],
                 "Modo":"Guiado" if "Guiado" in u["modo"] else "Manual",
                 "Clasificacion":rf["pred"],
                 "Tipo_Falla":ETIQUETAS[rf["pred"]].split(" ",1)[1],
                 "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
-                "X_UTM":u["x"] if u["x"]>1000 else "","Y_UTM":u["y"] if u["y"]>1000 else "",
+                "X_UTM":x_coord or "","Y_UTM":y_coord or "",
                 "Alimentador":rg["alim"] if rg else "",
                 "Confianza_Alim_%":rg["conf"] if rg else "",
                 "Dist_punto_m":rg["dist_p"] if rg else "",
                 "Comunas":rg["comunas"] if rg else ""})
-            st.success(f"✅ Registro N°{n} guardado en **{ARCHIVO}**")
+            st.success(f"✅ Registro N°{n} guardado correctamente")
+            st.session_state["mostrar"]=False
             st.session_state["ultimo"]={}
 
-# ══════════════════════════════════════════════════════════
-# PÁGINA 2 — HISTORIAL
-# ══════════════════════════════════════════════════════════
+# ─── Página 2: Historial ──────────────────────────────────
 elif pagina=="📋 Historial":
     st.markdown("## 📋 Historial de Fallas")
     dh=cargar_hist()
@@ -357,7 +364,9 @@ elif pagina=="📋 Historial":
         c1,c2,c3,c4=st.columns(4); c1.metric("Total",len(dh))
         if "Clasificacion" in dh.columns:
             cnt=dh["Clasificacion"].value_counts()
-            c2.metric("🔴 FM",cnt.get("FM",0)); c3.metric("🟡 E",cnt.get("E",0)); c4.metric("🟢 I",cnt.get("I",0))
+            c2.metric("🔴 FM",cnt.get("FM",0))
+            c3.metric("🟡 E",cnt.get("E",0))
+            c4.metric("🟢 I",cnt.get("I",0))
         st.markdown("---")
         fa,fb=st.columns(2)
         with fa:
@@ -373,9 +382,7 @@ elif pagina=="📋 Historial":
         csv=dh.to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Descargar CSV",csv,"historial_fallas.csv","text/csv")
 
-# ══════════════════════════════════════════════════════════
-# PÁGINA 3 — MAPA GENERAL
-# ══════════════════════════════════════════════════════════
+# ─── Página 3: Mapa General ───────────────────────────────
 elif pagina=="🗺 Mapa General":
     st.markdown("## 🗺 Mapa de Alimentadores CEC")
     ma,mb=st.columns([3,1])
@@ -383,11 +390,20 @@ elif pagina=="🗺 Mapa General":
         st.markdown("**Alimentadores:**")
         for alim,c in sorted(info_alim.items()):
             st.markdown(f"● **Alim.{alim}** — {c['comunas']}")
-    with ma: st_folium(mapa(),width=720,height=500)
+    with ma:
+        m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
+        for alim,c in sorted(info_alim.items()):
+            col=COLORES_ALIM.get(alim,"gray")
+            paso=max(1,len(c["pts"])//60)
+            for i in range(0,len(c["pts"]),paso):
+                folium.CircleMarker(c["pts"][i],radius=3,color=col,
+                    fill=True,fill_opacity=0.35,weight=0).add_to(m)
+            folium.Marker([c["lat"],c["lon"]],tooltip=f"Alimentador {alim}",
+                popup=folium.Popup(f"<b>Alim.{alim}</b><br>Comunas:{c['comunas']}<br>Fallas:{c['n_fallas']}",max_width=180),
+                icon=folium.Icon(color=col,icon="info-sign",prefix="glyphicon")).add_to(m)
+        st_folium(m,width=700,height=500)
 
-# ══════════════════════════════════════════════════════════
-# PÁGINA 4 — AYUDA
-# ══════════════════════════════════════════════════════════
+# ─── Página 4: Ayuda ──────────────────────────────────────
 elif pagina=="ℹ️ Ayuda":
     st.markdown("## ℹ️ Guía de uso")
     with st.expander("📝 ¿Cómo registrar una falla?",expanded=True):
@@ -409,9 +425,10 @@ elif pagina=="ℹ️ Ayuda":
         """)
     with st.expander("📍 Coordenadas y alimentadores"):
         st.markdown("""
-        - Usa las coordenadas **X e Y** directamente del Excel (UTM zona 19S)
-        - El modelo **KNN** identifica el alimentador con ~90% de precisión
+        - Usa las coordenadas **X e Y** del Excel (UTM zona 19S)
+        - Acepta tanto punto (315569.5) como coma (315569,5)
+        - El modelo KNN identifica el alimentador con ~90% de precisión
         - 🟢 Alta (>80%) / 🟡 Media (50-80%) / 🔴 Baja (<50%)
         """)
     with st.expander("💾 ¿Dónde se guardan los datos?"):
-        st.markdown(f"En **`{ARCHIVO}`** en la carpeta donde ejecutas la app. Descárgalos desde **📋 Historial**.")
+        st.markdown("Los registros se guardan en **fallas_ingresadas.xlsx**. Descárgalos desde **📋 Historial**.")
