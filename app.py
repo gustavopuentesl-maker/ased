@@ -311,12 +311,23 @@ if pagina=="Registrar Falla":
     with d1:
         trafos = st.number_input("Transformadores afectados:",min_value=0,value=0,step=1)
         kva    = st.number_input("KVA:",min_value=0.0,value=0.0,step=0.5,format="%.1f")
+    # Diccionario comuna → ID
+    COMUNA_IDS = {
+        "Curicó":       "7301",
+        "Teno":         "7308",
+        "Molina":       "7304",
+        "Romeral":      "7306",
+        "Chimbarongo":  "6102",
+        "Otra":         "",
+    }
+    
     with d2:
-        clientes = st.number_input("Clientes afectados:",min_value=0,value=0,step=1)
+        clientes   = st.number_input("Clientes afectados:",min_value=0,value=0,step=1)
         comuna_sel = st.selectbox("Comuna:",COMUNAS)
     with d3:
         tension_sel = st.selectbox("Tipo de tensión:",TENSIONES)
-        comuna_id   = st.text_input("Comuna ID:",placeholder="Ej: 7301")
+        comuna_id   = COMUNA_IDS.get(comuna_sel, "")
+        st.text_input("Comuna ID:",value=comuna_id,disabled=True)
 
     st.markdown("---")
 
