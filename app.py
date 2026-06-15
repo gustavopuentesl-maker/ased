@@ -446,7 +446,7 @@ if pagina=="Registrar Falla":
                     "Descripcion":u["desc"],"Categoria":u["cat"],"Subcausa":u["sub"],
                     "Modo":"Guiado" if "Guiado" in u["modo"] else "Manual",
                     "Clasificacion":rf["pred"],
-                    "Tipo_Falla":ETIQUETAS[rf["pred"]].split(" ",1)[1],
+                    "Tipo_Falla":ETIQUETAS[rf["pred"]],
                     "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
                     "Trafos_afectados":u.get("trafos",""),
                     "KVA":u.get("kva",""),
