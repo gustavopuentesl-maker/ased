@@ -309,7 +309,7 @@ if pagina=="Registrar Falla":
     st.markdown('<div class="sec">Sección 3 — Datos técnicos del evento</div>',unsafe_allow_html=True)
     d1,d2,d3 = st.columns(3)
     with d1:
-        trafos = st.number_input("Trafos afectados:",min_value=0,value=0,step=1)
+        trafos = st.number_input("Transformadores afectados:",min_value=0,value=0,step=1)
         kva    = st.number_input("KVA:",min_value=0.0,value=0.0,step=0.5,format="%.1f")
     with d2:
         clientes = st.number_input("Clientes afectados:",min_value=0,value=0,step=1)
