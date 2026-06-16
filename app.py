@@ -863,7 +863,7 @@ elif pagina=="Ayuda":
         """)
     with st.expander("Tipos de falla"):
         st.markdown(""
-        | Tipo | Código |
+        | Tipo | Código | 
         |------|--------|
         | Fuerza Mayor | FM | 
         | Externa | E | 
