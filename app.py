@@ -862,13 +862,13 @@ elif pagina=="Ayuda":
         6. Revisa el resultado y presiona **Guardar registro**
         """)
     with st.expander("Tipos de falla"):
-        st.markdown(""
+        st.markdown("""
         | Tipo | Código | 
         |------|--------|
         | Fuerza Mayor | FM | 
         | Externa | E | 
         | Interna | I | 
-        "")
+        """)
     with st.expander("Coordenadas y alimentadores"):
         st.markdown("""
         - Usa las coordenadas **X e Y** del Excel (UTM zona 19S)
