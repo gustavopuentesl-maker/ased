@@ -953,7 +953,7 @@ elif pagina=="Ayuda":
         st.markdown("""
         Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
         Puedes descargarlo como **CSV o Excel** desde la página **Historial**.
-        """)import streamlit as st
+        """)
 import os, re, warnings, requests, base64, json
 import numpy as np
 import pandas as pd
