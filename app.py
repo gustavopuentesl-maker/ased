@@ -865,9 +865,10 @@ elif pagina=="Mapa de Calor":
         m2=base_mapa()
         pts2=[]
         for _,r in df_f.iterrows():
-            la,lo=u2l(r.X_f,r.Y_f)
+            la,lo=u2l(r["X_f"],r["Y_f"])
             pts2.append([la,lo,float(r["dur_norm"])])
-        if pts2: HeatMap(pts2,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m2)
+        if pts2:
+            HeatMap(pts2,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m2)
         st_folium(m2,width=900,height=500,key="mapa2")
         d1,d2,d3=st.columns(3)
         d1.metric("Duración promedio",f"{df_f['Duracion'].mean():.2f} hrs")
@@ -883,9 +884,10 @@ elif pagina=="Mapa de Calor":
         m3=base_mapa()
         pts3=[]
         for _,r in df_f.iterrows():
-            la,lo=u2l(r.X_f,r.Y_f)
+            la,lo=u2l(r["X_f"],r["Y_f"])
             pts3.append([la,lo,float(r["peso_total"])])
-        if pts3: HeatMap(pts3,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m3)
+        if pts3:
+            HeatMap(pts3,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m3)
         st_folium(m3,width=900,height=500,key="mapa3")
         e1,e2,e3,e4=st.columns(4)
         e1.metric("Total fallas",f"{len(df_f):,}")
