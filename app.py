@@ -950,10 +950,10 @@ elif pagina=="Ayuda":
         - Alta (>80%) / Media (50-80%) / Baja (<50%)
         """)
     with st.expander("¿Dónde se guardan los datos?"):
-        st.markdown(""
+        st.markdown("""
         Los registros se guardan en **GitHub** en el archivo `fallas_ingresadas.csv`.
         Puedes descargarlo como **CSV o Excel** desde la página **Historial**.
-        "")import streamlit as st
+        """)import streamlit as st
 import os, re, warnings, requests, base64, json
 import numpy as np
 import pandas as pd
