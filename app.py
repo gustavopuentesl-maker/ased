@@ -801,7 +801,8 @@ elif pagina=="Mapa de Calor":
     def tf2(v):
         try: return float(str(v).replace(",","."))
         except: return np.nan
-    raw3["X_f"]=raw3["X"].apply(tf2); raw3["Y_f"]=raw3["Y"].apply(tf2)
+    raw3["X_f"]=raw3["X"].apply(tf2)
+    raw3["Y_f"]=raw3["Y"].apply(tf2)
     raw3["Calificacion"]=raw3["Calificacion"].str.strip().str.upper()
     raw3["Duracion"]=pd.to_numeric(raw3["Duracion"],errors="coerce")
     raw3["Clientes"]=pd.to_numeric(raw3["Clientes"],errors="coerce")
@@ -811,6 +812,7 @@ elif pagina=="Mapa de Calor":
     df_hm=df_hm[df_hm["Calificacion"].isin(["I","FM","E"])]
     df_hm["año"]=pd.to_numeric(df_hm["año"],errors="coerce")
 
+    # Filtros
     st.markdown("### Filtros")
     fc1,fc2,fc3=st.columns(3)
     with fc1:
@@ -822,7 +824,7 @@ elif pagina=="Mapa de Calor":
         años=sorted(df_hm["año"].dropna().astype(int).unique().tolist())
         yr=st.select_slider("Rango de años:",options=años,value=(min(años),max(años)))
     fa1,fa2=st.columns(2)
-    with fa1: radio=st.slider("Radio de puntos:",5,25,15)
+    with fa1: radio_px=st.slider("Radio de puntos:",5,25,15)
     with fa2: blur_val=st.slider("Difuminado:",5,20,10)
 
     df_f=df_hm[
@@ -831,8 +833,8 @@ elif pagina=="Mapa de Calor":
         (df_hm["año"].between(yr[0],yr[1]))
     ].copy()
 
-    dur_max=df_f["Duracion"].max() if df_f["Duracion"].max()>0 else 1
-    cli_max=df_f["Clientes"].max() if df_f["Clientes"].max()>0 else 1
+    dur_max=df_f["Duracion"].max() if len(df_f)>0 and df_f["Duracion"].max()>0 else 1
+    cli_max=df_f["Clientes"].max() if len(df_f)>0 and df_f["Clientes"].max()>0 else 1
     df_f["dur_norm"]=(df_f["Duracion"].fillna(0)/dur_max).clip(0.05,1)
     df_f["cli_norm"]=(df_f["Clientes"].fillna(0)/cli_max).clip(0.05,1)
     df_f["peso_total"]=(df_f["dur_norm"]+df_f["cli_norm"])/2
@@ -840,65 +842,73 @@ elif pagina=="Mapa de Calor":
     st.markdown("---")
     st.markdown(f"**{len(df_f):,} fallas en el periodo {yr[0]}–{yr[1]}**")
 
-    tab1,tab2,tab3=st.tabs([
-        "Mapa 1 — Frecuencia de fallas",
-        "Mapa 2 — Tiempo de desconexión",
-        "Mapa 3 — Combinado",
-    ])
+    # Selector de mapa (radio en vez de tabs para compatibilidad con Streamlit Cloud)
+    tipo_mapa=st.radio(
+        "Seleccionar mapa:",
+        ["Mapa 1 — Frecuencia de fallas",
+         "Mapa 2 — Tiempo de desconexión",
+         "Mapa 3 — Combinado (frecuencia + horas + clientes)"],
+        horizontal=True,
+        key="selector_mapa"
+    )
+    st.markdown("---")
 
-    # Pre-calcular todos los puntos antes de las pestañas
-    pts1=[]
-    pts2=[]
-    pts3=[]
-    for _,r in df_f.iterrows():
-        la,lo=u2l(r["X_f"],r["Y_f"])
-        pts1.append([la,lo])
-        pts2.append([la,lo,float(r["dur_norm"])])
-        pts3.append([la,lo,float(r["peso_total"])])
+    if len(df_f)==0:
+        st.warning("No hay datos para los filtros seleccionados.")
+    else:
+        # Pre-calcular coordenadas una sola vez
+        coords=[]
+        for _,r in df_f.iterrows():
+            la,lo=u2l(r["X_f"],r["Y_f"])
+            coords.append((la,lo))
 
-    with tab1:
-        st.markdown("**Zonas más intensas = mayor cantidad de fallas registradas**")
-        m1=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
-        if pts1: HeatMap(pts1,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m1)
-        st_folium(m1,width=900,height=500,key="hm1")
-        c1,c2,c3=st.columns(3)
-        for tipo,col in [("FM",c1),("E",c2),("I",c3)]:
-            n=len(df_f[df_f["Calificacion"]==tipo])
-            col.metric(tipo,f"{n:,}",f"{n/len(df_f)*100:.1f}%" if len(df_f)>0 else "0%")
+        if "Mapa 1" in tipo_mapa:
+            st.markdown("**Zonas más intensas = mayor cantidad de fallas registradas**")
+            m=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+            pts=[[la,lo] for la,lo in coords]
+            HeatMap(pts,radius=radio_px,blur=blur_val,min_opacity=0.3).add_to(m)
+            st_folium(m,width=900,height=500,key="hm1")
+            st.markdown("**Distribución por tipo:**")
+            c1,c2,c3=st.columns(3)
+            for tipo,col in [("FM",c1),("E",c2),("I",c3)]:
+                n=len(df_f[df_f["Calificacion"]==tipo])
+                col.metric(tipo,f"{n:,}",f"{n/len(df_f)*100:.1f}%")
 
-    with tab2:
-        st.markdown("**Zonas más intensas = mayor tiempo acumulado de interrupción (horas)**")
-        m2=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
-        if pts2: HeatMap(pts2,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m2)
-        st_folium(m2,width=900,height=500,key="hm2")
-        d1,d2,d3=st.columns(3)
-        d1.metric("Duración promedio",f"{df_f['Duracion'].mean():.2f} hrs")
-        d2.metric("Duración máxima",f"{df_f['Duracion'].max():.2f} hrs")
-        d3.metric("Total acumulado",f"{df_f['Duracion'].sum():.1f} hrs")
-        st.markdown("**Top 5 fallas con mayor duración:**")
-        top5=df_f.nlargest(5,"Duracion")[["año","Calificacion","Duracion","Clientes","Alimentador"]].copy()
-        top5.columns=["Año","Tipo","Duración (hrs)","Clientes afectados","Alimentador"]
-        st.dataframe(top5,use_container_width=True,hide_index=True)
+        elif "Mapa 2" in tipo_mapa:
+            st.markdown("**Zonas más intensas = mayor tiempo acumulado de interrupción (horas)**")
+            m=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+            pts=[[la,lo,float(df_f.iloc[i]["dur_norm"])] for i,(la,lo) in enumerate(coords)]
+            HeatMap(pts,radius=radio_px,blur=blur_val,min_opacity=0.3).add_to(m)
+            st_folium(m,width=900,height=500,key="hm2")
+            d1,d2,d3=st.columns(3)
+            d1.metric("Duración promedio",f"{df_f['Duracion'].mean():.2f} hrs")
+            d2.metric("Duración máxima",f"{df_f['Duracion'].max():.2f} hrs")
+            d3.metric("Total acumulado",f"{df_f['Duracion'].sum():.1f} hrs")
+            st.markdown("**Top 5 fallas con mayor duración:**")
+            top5=df_f.nlargest(5,"Duracion")[["año","Calificacion","Duracion","Clientes","Alimentador"]].copy()
+            top5.columns=["Año","Tipo","Duración (hrs)","Clientes afectados","Alimentador"]
+            st.dataframe(top5,use_container_width=True,hide_index=True)
 
-    with tab3:
-        st.markdown("**Zonas más intensas = mayor impacto combinado (frecuencia + horas + clientes afectados)**")
-        m3=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
-        if pts3: HeatMap(pts3,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m3)
-        st_folium(m3,width=900,height=500,key="hm3")
-        e1,e2,e3,e4=st.columns(4)
-        e1.metric("Total fallas",f"{len(df_f):,}")
-        e2.metric("Horas acumuladas",f"{df_f['Duracion'].sum():.1f}")
-        e3.metric("Clientes afectados",f"{df_f['Clientes'].sum():.0f}")
-        e4.metric("Promedio clientes/falla",f"{df_f['Clientes'].mean():.1f}")
-        st.markdown("**Resumen por tipo de falla:**")
-        res=df_f.groupby("Calificacion").agg(
-            Fallas=("INC","count"),
-            Hrs_prom=("Duracion","mean"),
-            Hrs_total=("Duracion","sum"),
-            Cli_prom=("Clientes","mean"),
-        ).round(2).reset_index()
-        res.columns=["Tipo","N° Fallas","Hrs promedio","Hrs totales","Clientes promedio"]
-        st.dataframe(res,use_container_width=True,hide_index=True)
+        elif "Mapa 3" in tipo_mapa:
+            st.markdown("**Zonas más intensas = mayor impacto combinado (frecuencia + horas + clientes afectados)**")
+            m=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+            pts=[[la,lo,float(df_f.iloc[i]["peso_total"])] for i,(la,lo) in enumerate(coords)]
+            HeatMap(pts,radius=radio_px,blur=blur_val,min_opacity=0.3).add_to(m)
+            st_folium(m,width=900,height=500,key="hm3")
+            e1,e2,e3,e4=st.columns(4)
+            e1.metric("Total fallas",f"{len(df_f):,}")
+            e2.metric("Horas acumuladas",f"{df_f['Duracion'].sum():.1f}")
+            e3.metric("Clientes afectados",f"{int(df_f['Clientes'].sum()):,}")
+            e4.metric("Promedio clientes/falla",f"{df_f['Clientes'].mean():.1f}")
+            st.markdown("**Resumen por tipo de falla:**")
+            res=df_f.groupby("Calificacion").agg(
+                Fallas=("INC","count"),
+                Hrs_prom=("Duracion","mean"),
+                Hrs_total=("Duracion","sum"),
+                Cli_prom=("Clientes","mean"),
+            ).round(2).reset_index()
+            res.columns=["Tipo","N° Fallas","Hrs promedio","Hrs totales","Clientes promedio"]
+            st.dataframe(res,use_container_width=True,hide_index=True)
 
 
 elif pagina=="Ayuda":
