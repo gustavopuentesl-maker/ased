@@ -846,15 +846,21 @@ elif pagina=="Mapa de Calor":
         "Mapa 3 — Combinado",
     ])
 
-    def base_mapa():
-        return folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+    # Pre-calcular todos los puntos antes de las pestañas
+    pts1=[]
+    pts2=[]
+    pts3=[]
+    for _,r in df_f.iterrows():
+        la,lo=u2l(r["X_f"],r["Y_f"])
+        pts1.append([la,lo])
+        pts2.append([la,lo,float(r["dur_norm"])])
+        pts3.append([la,lo,float(r["peso_total"])])
 
     with tab1:
         st.markdown("**Zonas más intensas = mayor cantidad de fallas registradas**")
-        m1=base_mapa()
-        pts1=[[u2l(r.X_f,r.Y_f)[0],u2l(r.X_f,r.Y_f)[1]] for _,r in df_f.iterrows()]
+        m1=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
         if pts1: HeatMap(pts1,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m1)
-        st_folium(m1,width=900,height=500,key="mapa1")
+        st_folium(m1,width=900,height=500,key="hm1")
         c1,c2,c3=st.columns(3)
         for tipo,col in [("FM",c1),("E",c2),("I",c3)]:
             n=len(df_f[df_f["Calificacion"]==tipo])
@@ -862,14 +868,9 @@ elif pagina=="Mapa de Calor":
 
     with tab2:
         st.markdown("**Zonas más intensas = mayor tiempo acumulado de interrupción (horas)**")
-        m2=base_mapa()
-        pts2=[]
-        for _,r in df_f.iterrows():
-            la,lo=u2l(r["X_f"],r["Y_f"])
-            pts2.append([la,lo,float(r["dur_norm"])])
-        if pts2:
-            HeatMap(pts2,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m2)
-        st_folium(m2,width=900,height=500,key="mapa2")
+        m2=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+        if pts2: HeatMap(pts2,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m2)
+        st_folium(m2,width=900,height=500,key="hm2")
         d1,d2,d3=st.columns(3)
         d1.metric("Duración promedio",f"{df_f['Duracion'].mean():.2f} hrs")
         d2.metric("Duración máxima",f"{df_f['Duracion'].max():.2f} hrs")
@@ -881,14 +882,9 @@ elif pagina=="Mapa de Calor":
 
     with tab3:
         st.markdown("**Zonas más intensas = mayor impacto combinado (frecuencia + horas + clientes afectados)**")
-        m3=base_mapa()
-        pts3=[]
-        for _,r in df_f.iterrows():
-            la,lo=u2l(r["X_f"],r["Y_f"])
-            pts3.append([la,lo,float(r["peso_total"])])
-        if pts3:
-            HeatMap(pts3,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m3)
-        st_folium(m3,width=900,height=500,key="mapa3")
+        m3=folium.Map(location=[-34.98,-71.08],zoom_start=11,tiles="CartoDB positron")
+        if pts3: HeatMap(pts3,radius=radio,blur=blur_val,min_opacity=0.3).add_to(m3)
+        st_folium(m3,width=900,height=500,key="hm3")
         e1,e2,e3,e4=st.columns(4)
         e1.metric("Total fallas",f"{len(df_f):,}")
         e2.metric("Horas acumuladas",f"{df_f['Duracion'].sum():.1f}")
