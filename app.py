@@ -520,8 +520,20 @@ elif pagina=="Mapa General":
     ma,mb=st.columns([3,1])
     with mb:
         st.markdown("**Alimentadores:**")
+        nombres_alim = {
+            2:  "Morza",
+            6:  "Zapallar",
+            7:  "Los Niches",
+            8:  "Industrial",
+            9:  "Los Queñes",
+            10: "La Laguna",
+        }
         for alim,c in sorted(info_alim.items()):
-            st.markdown(f"Alim.{alim} — {c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]}")
+            nombre = nombres_alim.get(alim, "")
+            comunas = c[chr(99)+chr(111)+chr(109)+chr(117)+chr(110)+chr(97)+chr(115)]
+            st.markdown(f"**Alim. {alim}** — {nombre}<br><span style='font-size:11px;color:gray'>{comunas}</span>",
+                        unsafe_allow_html=True)
+            st.markdown("---")
     with ma:
         m=folium.Map(location=[-34.98,-71.08],zoom_start=10)
         for alim,c in sorted(info_alim.items()):
