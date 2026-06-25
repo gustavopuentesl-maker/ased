@@ -454,27 +454,42 @@ if pagina=="Registrar Falla":
         if st.button("Guardar registro",type="primary"):
             with st.spinner("Guardando en GitHub..."):
                 n=guardar({
-                    "Usuario":u["usuario"],"Cuadrilla":u["cuadrilla"],
-                    "Descripcion":u["desc"],"Categoria":u["cat"],"Subcausa":u["sub"],
-                    "Modo":"Guiado" if "Guiado" in u["modo"] else "Manual",
-                    "Clasificacion":rf["pred"],
-                    "Tipo_Falla":ETIQUETAS[rf["pred"]],
-                    "Confianza_%":rf["conf"],"Prob_FM":rf["FM"],"Prob_E":rf["E"],"Prob_I":rf["I"],
-                    "Trafos_afectados":u.get("trafos",""),
-                    "KVA":u.get("kva",""),
-                    "Clientes_afectados":u.get("clientes",""),
-                    "Comuna":u.get("comuna",""),
-                    "Comuna_ID":u.get("comuna_id",""),
-                    "Tension":u.get("tension",""),
-                    "Inicio":u.get("inicio",""),
-                    "Fin":u.get("fin",""),
-                    "Duracion_hrs":u.get("dur_hrs",""),
-                    "X_UTM":x_coord or "","Y_UTM":y_coord or "",
-                    "Alimentador":rg["alim"] if rg else "",
-                    "Nombre_Alimentador":rg["nombre"] if rg else "",
-                    "Confianza_Alim_%":rg["conf"] if rg else "",
-                    "Dist_punto_m":rg["dist_p"] if rg else "",
-                    "Comunas_alim":rg["comunas"] if rg else ""},
+                    # ── Identificación del registro ──
+                    "Fecha_hora":       u.get("inicio",""),
+                    "Usuario":          u["usuario"],
+                    "Cuadrilla":        u["cuadrilla"],
+                    # ── Datos del evento ──
+                    "Inicio":           u.get("inicio",""),
+                    "Fin":              u.get("fin",""),
+                    "Duracion_hrs":     u.get("dur_hrs",""),
+                    # ── Clasificación de la falla ──
+                    "Clasificacion":    rf["pred"],
+                    "Tipo_Falla":       ETIQUETAS[rf["pred"]],
+                    "Categoria":        u["cat"],
+                    "Subcausa":         u["sub"],
+                    "Descripcion":      u["desc"],
+                    "Modo":             "Guiado" if "Guiado" in u["modo"] else "Manual",
+                    "Confianza_%":      rf["conf"],
+                    "Prob_FM":          rf["FM"],
+                    "Prob_E":           rf["E"],
+                    "Prob_I":           rf["I"],
+                    # ── Alimentador identificado ──
+                    "Alimentador":          rg["alim"] if rg else "",
+                    "Nombre_Alimentador":   rg["nombre"] if rg else "",
+                    "Comunas_alim":         rg["comunas"] if rg else "",
+                    "Confianza_Alim_%":     rg["conf"] if rg else "",
+                    "Dist_punto_m":         rg["dist_p"] if rg else "",
+                    # ── Datos técnicos del evento ──
+                    "Trafos_afectados":     u.get("trafos",""),
+                    "KVA":                  u.get("kva",""),
+                    "Clientes_afectados":   u.get("clientes",""),
+                    "Tension":              u.get("tension",""),
+                    "Comuna":               u.get("comuna",""),
+                    "Comuna_ID":            u.get("comuna_id",""),
+                    # ── Coordenadas ──
+                    "X_UTM":    x_coord or "",
+                    "Y_UTM":    y_coord or "",
+                },
                     foto_bytes=u.get("foto_bytes"),
                     foto_nombre=u.get("foto_nombre"))
             st.success(f"Registro N°{n} guardado correctamente en GitHub")
