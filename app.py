@@ -141,6 +141,17 @@ def guardar(fila, foto_bytes=None, foto_nombre=None):
     fila["Fecha_hora"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     fila["Foto"]       = f"fotos/registro_{n}.jpg" if foto_bytes else ""
     dh  = pd.concat([dh, pd.DataFrame([fila])], ignore_index=True)
+    orden = [
+        "N°","Fecha_hora","Usuario","Cuadrilla",
+        "Inicio","Fin","Duracion_hrs",
+        "Clasificacion","Tipo_Falla","Categoria","Subcausa","Descripcion","Modo",
+        "Confianza_%","Prob_FM","Prob_E","Prob_I",
+        "Alimentador","Nombre_Alimentador","Comunas_alim","Confianza_Alim_%","Dist_punto_m",
+        "Trafos_afectados","KVA","Clientes_afectados","Tension","Comuna","Comuna_ID",
+        "X_UTM","Y_UTM","Foto"
+    ]
+    cols_existentes = [c for c in orden if c in dh.columns]
+    dh = dh[cols_existentes]
     csv_b64 = base64.b64encode(dh.to_csv(index=False).encode()).decode()
     url     = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ARCHIVO_CSV}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}","Content-Type":"application/json"}
