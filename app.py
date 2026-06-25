@@ -260,13 +260,20 @@ def predecir(desc):
             "E":round(pr.get("E",0)*100,1),
             "I":round(pr.get("I",0)*100,1)}
 
+NOMBRES_ALIM = {
+    2:"Morza", 6:"Zapallar", 7:"Los Niches",
+    8:"Industrial", 9:"Los Queñes", 10:"La Laguna",
+}
+
 def id_alim(x,y):
     if not x or not y or x<1000: return None
     p=np.array([[x,y]]); alim=int(knn_alim.predict(p)[0])
     proba=dict(zip(knn_alim.classes_,knn_alim.predict_proba(p)[0]))
     dist=float(knn_alim.kneighbors(p,n_neighbors=1)[0][0][0])
     c=info_alim[alim]; dc=np.sqrt((x-c["x_utm"])**2+(y-c["y_utm"])**2)
-    return {"alim":alim,"conf":round(proba[alim]*100,1),"dist_p":round(dist,1),
+    return {"alim":alim,
+            "nombre":NOMBRES_ALIM.get(alim,f"Alimentador {alim}"),
+            "conf":round(proba[alim]*100,1),"dist_p":round(dist,1),
             "dist_c":round(dc,1),"comunas":c["comunas"],
             "votos":{int(a):round(p*100,1) for a,p in proba.items() if p>0.01}}
 
@@ -412,7 +419,7 @@ if pagina=="Registrar Falla":
             nivel="Alta" if rg["conf"]>=80 else "Media" if rg["conf"]>=50 else "Baja"
             votos=" | ".join(f"Alim.{a}:{p}%" for a,p in sorted(rg["votos"].items(),key=lambda x:-x[1]))
             st.markdown(f"""<div class="geo-card">
-              <b>Alimentador identificado: #{rg["alim"]}</b> — Confianza {nivel} ({rg["conf"]}%)<br>
+              <b>Alimentador {rg["alim"]} — {rg["nombre"]}</b> — Confianza {nivel} ({rg["conf"]}%)<br>
               Dist.punto histórico:{rg["dist_p"]}m | Comunas:{rg["comunas"]}<br>
               <small>Votos KNN: {votos}</small>
             </div>""",unsafe_allow_html=True)
@@ -464,6 +471,7 @@ if pagina=="Registrar Falla":
                     "Duracion_hrs":u.get("dur_hrs",""),
                     "X_UTM":x_coord or "","Y_UTM":y_coord or "",
                     "Alimentador":rg["alim"] if rg else "",
+                    "Nombre_Alimentador":rg["nombre"] if rg else "",
                     "Confianza_Alim_%":rg["conf"] if rg else "",
                     "Dist_punto_m":rg["dist_p"] if rg else "",
                     "Comunas_alim":rg["comunas"] if rg else ""},
