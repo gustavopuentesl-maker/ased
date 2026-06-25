@@ -131,7 +131,11 @@ def cargar_hist():
     r       = requests.get(url, headers=headers)
     if r.status_code == 200:
         contenido = base64.b64decode(r.json()["content"]).decode("utf-8")
-        return pd.read_csv(StringIO(contenido))
+        if contenido.strip():  # verificar que no esté vacío
+            try:
+                return pd.read_csv(StringIO(contenido))
+            except:
+                return pd.DataFrame()
     return pd.DataFrame()
 
 def guardar(fila, foto_bytes=None, foto_nombre=None):
