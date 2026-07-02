@@ -803,13 +803,24 @@ elif pagina=="Datos Actuales":
                 st.plotly_chart(fig2,use_container_width=True)
         if "Alimentador" in dh.columns:
             st.markdown("---")
-            dh2=dh[dh["Alimentador"].astype(str)!=""]
+            dh2=dh[dh["Alimentador"].astype(str)!=""].copy()
             if len(dh2)>0:
-                ac=dh2.groupby(["Alimentador","Clasificacion"]).size().reset_index(name="N")
-                fig3=px.bar(ac,x="Alimentador",y="N",color="Clasificacion",barmode="stack",
+                nombres_alim={
+                    2:"Alim.2 Morza",6:"Alim.6 Zapallar",7:"Alim.7 Los Niches",
+                    8:"Alim.8 Industrial",9:"Alim.9 Los Queñes",
+                    10:"Alim.10 La Laguna",11:"Alim.11 La Obra"
+                }
+                dh2["Alimentador"]=pd.to_numeric(dh2["Alimentador"],errors="coerce")
+                dh2=dh2.dropna(subset=["Alimentador"])
+                dh2["Alimentador"]=dh2["Alimentador"].astype(int)
+                dh2["Nombre"]=dh2["Alimentador"].map(nombres_alim).fillna(
+                    dh2["Alimentador"].astype(str))
+                ac=dh2.groupby(["Nombre","Clasificacion"]).size().reset_index(name="N")
+                fig3=px.bar(ac,x="Nombre",y="N",color="Clasificacion",barmode="stack",
                             color_discrete_map={"FM":"#e74c3c","E":"#f39c12","I":"#27ae60"},
-                            title="Fallas por alimentador")
-                fig3.update_layout(plot_bgcolor="white")
+                            title="Fallas por alimentador",
+                            labels={"Nombre":"Alimentador","N":"Fallas"})
+                fig3.update_layout(plot_bgcolor="white",xaxis_tickangle=-20)
                 st.plotly_chart(fig3,use_container_width=True)
         if "Duracion_hrs" in dh.columns:
             st.markdown("---")
